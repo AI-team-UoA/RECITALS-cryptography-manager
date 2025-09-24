@@ -1,1 +1,1 @@
-# RECITALS-cryptography-manager
+# RECITALS Cryptography Manager

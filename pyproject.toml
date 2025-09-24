@@ -1,0 +1,41 @@
+[project]
+name = "cryptography-manager"
+version = "0.1.0"
+description = "Anonymization component for the RECITALS platform"
+readme = "README.md"
+authors = [
+    { name = "Georgios Stamoulis", email = "gstam@di.uoa.gr" },
+    { name = "Konstantinos Chousos", email = "kchousos@di.uoa.gr" },
+    { name = "Dimitris Pavlou", email = "sdi2100151@di.uoa.gr" },
+]
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "tink>=1.12.0",
+]
+
+[project.scripts]
+cryptography-manager = "cryptography_manager:main"
+
+[dependency-groups]
+dev = [
+    "basedpyright>=1.31.4",
+    "ruff>=0.13.1",
+]
+docs = [
+    "pdoc>=15.0.4",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 79
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.basedpyright]
+reportUnusedCallResult = "none"
+reportAny = "none"
+reportMissingTypeStubs = "none"
+reportUnknownMemberType = "none"
