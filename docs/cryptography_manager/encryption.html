@@ -65,6 +65,12 @@
                         <li>
                                 <a class="function" href="#Encryption.gen_key">gen_key</a>
                         </li>
+                        <li>
+                                <a class="function" href="#Encryption.save_keyset">save_keyset</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Encryption.load_keyset">load_keyset</a>
+                        </li>
                 </ul>
 
             </li>
@@ -91,45 +97,130 @@
 
                         <label class="view-source-button" for="mod-encryption-view-source"><span>View Source</span></label>
 
-                        <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos"> 1</span></a><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-2"><a href="#L-2"><span class="linenos"> 2</span></a><span class="sd">Cryptography Manager&#39;s Encryption/Decryption submodule.</span>
-</span><span id="L-3"><a href="#L-3"><span class="linenos"> 3</span></a><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a>
-</span><span id="L-5"><a href="#L-5"><span class="linenos"> 5</span></a><span class="kn">import</span><span class="w"> </span><span class="nn">tink</span>
-</span><span id="L-6"><a href="#L-6"><span class="linenos"> 6</span></a>
-</span><span id="L-7"><a href="#L-7"><span class="linenos"> 7</span></a>
-</span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a><span class="k">class</span><span class="w"> </span><span class="nc">Encryption</span><span class="p">:</span>
-</span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">encrypt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">keyset</span><span class="p">:</span> <span class="n">tink</span><span class="o">.</span><span class="n">KeysetHandle</span><span class="p">):</span>
-</span><span id="L-10"><a href="#L-10"><span class="linenos">10</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a><span class="sd">        Encrypt stored data.</span>
-</span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a>
-</span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a><span class="sd">        Args:</span>
-</span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a><span class="sd">            data (str): Path to the stored data.</span>
-</span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a><span class="sd">            keyset (tink.KeysetHandle): Handle to the keyset object containing the key.</span>
-</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a>        <span class="o">...</span>
-</span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a>
-</span><span id="L-19"><a href="#L-19"><span class="linenos">19</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">decrypt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enc_data</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">keyset</span><span class="p">:</span> <span class="n">tink</span><span class="o">.</span><span class="n">KeysetHandle</span><span class="p">):</span>
-</span><span id="L-20"><a href="#L-20"><span class="linenos">20</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a><span class="sd">        Decrypt stored encrypted data.</span>
-</span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a>
-</span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a><span class="sd">        Args:</span>
-</span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a><span class="sd">            enc_data (str): Path to the encrypted data.</span>
-</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a><span class="sd">            keyset (tink.KeysetHandle): Handle to the keyset object containing the key.</span>
-</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a>        <span class="o">...</span>
-</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a>
-</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">gen_key</span><span class="p">():</span>
-</span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a><span class="sd">        Generates a key for AEAD primitive, using AES256_GCM_SIV implementation.</span>
-</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a>
-</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a><span class="sd">        &gt; *AES128_GCM_SIV is nearly as fast as AES128_GCM. It has the same limits as</span>
-</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a><span class="sd">        &gt; AES128_GCM on the number of messages and message size, but when these</span>
-</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a><span class="sd">        &gt; limits are exceeded, it fails in a less catastrophic way: it may only leak</span>
-</span><span id="L-36"><a href="#L-36"><span class="linenos">36</span></a><span class="sd">        &gt; the fact that two messages are equal. This makes it safer to use than</span>
-</span><span id="L-37"><a href="#L-37"><span class="linenos">37</span></a><span class="sd">        &gt; AES128_GCM, but it is less widely used in practice.*</span>
-</span><span id="L-38"><a href="#L-38"><span class="linenos">38</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="L-39"><a href="#L-39"><span class="linenos">39</span></a>        <span class="o">...</span>
+                        <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos">  1</span></a><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-2"><a href="#L-2"><span class="linenos">  2</span></a><span class="sd">Cryptography Manager&#39;s Encryption/Decryption submodule.</span>
+</span><span id="L-3"><a href="#L-3"><span class="linenos">  3</span></a><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-4"><a href="#L-4"><span class="linenos">  4</span></a>
+</span><span id="L-5"><a href="#L-5"><span class="linenos">  5</span></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="L-6"><a href="#L-6"><span class="linenos">  6</span></a>
+</span><span id="L-7"><a href="#L-7"><span class="linenos">  7</span></a><span class="kn">import</span><span class="w"> </span><span class="nn">tink</span>
+</span><span id="L-8"><a href="#L-8"><span class="linenos">  8</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">tink</span><span class="w"> </span><span class="kn">import</span> <span class="n">aead</span>
+</span><span id="L-9"><a href="#L-9"><span class="linenos">  9</span></a>
+</span><span id="L-10"><a href="#L-10"><span class="linenos"> 10</span></a><span class="n">aead</span><span class="o">.</span><span class="n">register</span><span class="p">()</span>  <span class="c1"># Register AEAD primitive</span>
+</span><span id="L-11"><a href="#L-11"><span class="linenos"> 11</span></a>
+</span><span id="L-12"><a href="#L-12"><span class="linenos"> 12</span></a>
+</span><span id="L-13"><a href="#L-13"><span class="linenos"> 13</span></a><span class="k">class</span><span class="w"> </span><span class="nc">Encryption</span><span class="p">:</span>
+</span><span id="L-14"><a href="#L-14"><span class="linenos"> 14</span></a>    <span class="nd">@staticmethod</span>
+</span><span id="L-15"><a href="#L-15"><span class="linenos"> 15</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_get_aead_primitive</span><span class="p">(</span><span class="n">keyset_handle</span><span class="p">:</span> <span class="n">tink</span><span class="o">.</span><span class="n">KeysetHandle</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">aead</span><span class="o">.</span><span class="n">Aead</span><span class="p">:</span>
+</span><span id="L-16"><a href="#L-16"><span class="linenos"> 16</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets an AEAD primitive from a KeysetHandle.</span>
+</span><span id="L-17"><a href="#L-17"><span class="linenos"> 17</span></a>
+</span><span id="L-18"><a href="#L-18"><span class="linenos"> 18</span></a><span class="sd">        Args:</span>
+</span><span id="L-19"><a href="#L-19"><span class="linenos"> 19</span></a><span class="sd">            keyset_handle (tink.KeysetHandle): The handle to the keyset.</span>
+</span><span id="L-20"><a href="#L-20"><span class="linenos"> 20</span></a>
+</span><span id="L-21"><a href="#L-21"><span class="linenos"> 21</span></a><span class="sd">        Returns:</span>
+</span><span id="L-22"><a href="#L-22"><span class="linenos"> 22</span></a><span class="sd">            tink.aead.Aead: The AEAD primitive.</span>
+</span><span id="L-23"><a href="#L-23"><span class="linenos"> 23</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-24"><a href="#L-24"><span class="linenos"> 24</span></a>        <span class="k">return</span> <span class="n">keyset_handle</span><span class="o">.</span><span class="n">primitive</span><span class="p">(</span><span class="n">aead</span><span class="o">.</span><span class="n">Aead</span><span class="p">)</span>
+</span><span id="L-25"><a href="#L-25"><span class="linenos"> 25</span></a>
+</span><span id="L-26"><a href="#L-26"><span class="linenos"> 26</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">encrypt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">keyset_handle</span><span class="p">:</span> <span class="n">tink</span><span class="o">.</span><span class="n">KeysetHandle</span><span class="p">):</span>
+</span><span id="L-27"><a href="#L-27"><span class="linenos"> 27</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Encrypts stored data, binding to the file&#39;s basename as associated data.</span>
+</span><span id="L-28"><a href="#L-28"><span class="linenos"> 28</span></a>
+</span><span id="L-29"><a href="#L-29"><span class="linenos"> 29</span></a><span class="sd">        Writes ciphertext to `data + &#39;.enc&#39;`.</span>
+</span><span id="L-30"><a href="#L-30"><span class="linenos"> 30</span></a>
+</span><span id="L-31"><a href="#L-31"><span class="linenos"> 31</span></a><span class="sd">        Args:</span>
+</span><span id="L-32"><a href="#L-32"><span class="linenos"> 32</span></a><span class="sd">            data (str): Path to the stored data to encrypt.</span>
+</span><span id="L-33"><a href="#L-33"><span class="linenos"> 33</span></a><span class="sd">            keyset_handle (tink.KeysetHandle): Handle to the keyset object containing the key.</span>
+</span><span id="L-34"><a href="#L-34"><span class="linenos"> 34</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-35"><a href="#L-35"><span class="linenos"> 35</span></a>        <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_aead_primitive</span><span class="p">(</span><span class="n">keyset_handle</span><span class="p">)</span>
+</span><span id="L-36"><a href="#L-36"><span class="linenos"> 36</span></a>        <span class="n">associated_data</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+</span><span id="L-37"><a href="#L-37"><span class="linenos"> 37</span></a>        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_in</span><span class="p">:</span>
+</span><span id="L-38"><a href="#L-38"><span class="linenos"> 38</span></a>            <span class="n">plaintext</span> <span class="o">=</span> <span class="n">f_in</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span><span id="L-39"><a href="#L-39"><span class="linenos"> 39</span></a>        <span class="n">ciphertext</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">encrypt</span><span class="p">(</span><span class="n">plaintext</span><span class="p">,</span> <span class="n">associated_data</span><span class="p">)</span>
+</span><span id="L-40"><a href="#L-40"><span class="linenos"> 40</span></a>        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">data</span> <span class="o">+</span> <span class="s2">&quot;.enc&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_out</span><span class="p">:</span>
+</span><span id="L-41"><a href="#L-41"><span class="linenos"> 41</span></a>            <span class="n">f_out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">ciphertext</span><span class="p">)</span>
+</span><span id="L-42"><a href="#L-42"><span class="linenos"> 42</span></a>
+</span><span id="L-43"><a href="#L-43"><span class="linenos"> 43</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">decrypt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enc_data</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">keyset_handle</span><span class="p">:</span> <span class="n">tink</span><span class="o">.</span><span class="n">KeysetHandle</span><span class="p">):</span>
+</span><span id="L-44"><a href="#L-44"><span class="linenos"> 44</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Decrypts stored encrypted data, using the original file&#39;s basename as associated data.</span>
+</span><span id="L-45"><a href="#L-45"><span class="linenos"> 45</span></a>
+</span><span id="L-46"><a href="#L-46"><span class="linenos"> 46</span></a><span class="sd">        Writes plaintext to `enc_data + &#39;.dec&#39;`.</span>
+</span><span id="L-47"><a href="#L-47"><span class="linenos"> 47</span></a>
+</span><span id="L-48"><a href="#L-48"><span class="linenos"> 48</span></a><span class="sd">        Args:</span>
+</span><span id="L-49"><a href="#L-49"><span class="linenos"> 49</span></a><span class="sd">            enc_data (str): Path to the encrypted data file.</span>
+</span><span id="L-50"><a href="#L-50"><span class="linenos"> 50</span></a><span class="sd">            keyset_handle (tink.KeysetHandle): Handle to the keyset object containing the key.</span>
+</span><span id="L-51"><a href="#L-51"><span class="linenos"> 51</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-52"><a href="#L-52"><span class="linenos"> 52</span></a>        <span class="c1"># Remove &#39;.enc&#39; extension to get original data filename for associated data</span>
+</span><span id="L-53"><a href="#L-53"><span class="linenos"> 53</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">enc_data</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.enc&quot;</span><span class="p">):</span>
+</span><span id="L-54"><a href="#L-54"><span class="linenos"> 54</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Encrypted file should have .enc extension&quot;</span><span class="p">)</span>
+</span><span id="L-55"><a href="#L-55"><span class="linenos"> 55</span></a>        <span class="n">basename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">enc_data</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">])</span>  <span class="c1"># Remove &#39;.enc&#39;</span>
+</span><span id="L-56"><a href="#L-56"><span class="linenos"> 56</span></a>        <span class="n">associated_data</span> <span class="o">=</span> <span class="n">basename</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+</span><span id="L-57"><a href="#L-57"><span class="linenos"> 57</span></a>        <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_aead_primitive</span><span class="p">(</span><span class="n">keyset_handle</span><span class="p">)</span>
+</span><span id="L-58"><a href="#L-58"><span class="linenos"> 58</span></a>        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">enc_data</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_in</span><span class="p">:</span>
+</span><span id="L-59"><a href="#L-59"><span class="linenos"> 59</span></a>            <span class="n">ciphertext</span> <span class="o">=</span> <span class="n">f_in</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span><span id="L-60"><a href="#L-60"><span class="linenos"> 60</span></a>        <span class="n">plaintext</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">decrypt</span><span class="p">(</span><span class="n">ciphertext</span><span class="p">,</span> <span class="n">associated_data</span><span class="p">)</span>
+</span><span id="L-61"><a href="#L-61"><span class="linenos"> 61</span></a>        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">enc_data</span> <span class="o">+</span> <span class="s2">&quot;.dec&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_out</span><span class="p">:</span>
+</span><span id="L-62"><a href="#L-62"><span class="linenos"> 62</span></a>            <span class="n">f_out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">plaintext</span><span class="p">)</span>
+</span><span id="L-63"><a href="#L-63"><span class="linenos"> 63</span></a>
+</span><span id="L-64"><a href="#L-64"><span class="linenos"> 64</span></a>    <span class="nd">@staticmethod</span>
+</span><span id="L-65"><a href="#L-65"><span class="linenos"> 65</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">gen_key</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">tink</span><span class="o">.</span><span class="n">KeysetHandle</span><span class="p">:</span>
+</span><span id="L-66"><a href="#L-66"><span class="linenos"> 66</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Generates a key for the AEAD primitive using AES256_GCM_SIV.</span>
+</span><span id="L-67"><a href="#L-67"><span class="linenos"> 67</span></a>
+</span><span id="L-68"><a href="#L-68"><span class="linenos"> 68</span></a><span class="sd">        Returns:</span>
+</span><span id="L-69"><a href="#L-69"><span class="linenos"> 69</span></a><span class="sd">            tink.KeysetHandle: The generated keyset handle.</span>
+</span><span id="L-70"><a href="#L-70"><span class="linenos"> 70</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-71"><a href="#L-71"><span class="linenos"> 71</span></a>        <span class="k">return</span> <span class="n">tink</span><span class="o">.</span><span class="n">new_keyset_handle</span><span class="p">(</span><span class="n">aead</span><span class="o">.</span><span class="n">aead_key_templates</span><span class="o">.</span><span class="n">AES256_GCM_SIV</span><span class="p">)</span>
+</span><span id="L-72"><a href="#L-72"><span class="linenos"> 72</span></a>
+</span><span id="L-73"><a href="#L-73"><span class="linenos"> 73</span></a>    <span class="nd">@staticmethod</span>
+</span><span id="L-74"><a href="#L-74"><span class="linenos"> 74</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">save_keyset</span><span class="p">(</span><span class="n">keyset_handle</span><span class="p">:</span> <span class="n">tink</span><span class="o">.</span><span class="n">KeysetHandle</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="L-75"><a href="#L-75"><span class="linenos"> 75</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Saves a keyset to a file in plaintext JSON format.</span>
+</span><span id="L-76"><a href="#L-76"><span class="linenos"> 76</span></a>
+</span><span id="L-77"><a href="#L-77"><span class="linenos"> 77</span></a><span class="sd">        Args:</span>
+</span><span id="L-78"><a href="#L-78"><span class="linenos"> 78</span></a><span class="sd">            keyset_handle (tink.KeysetHandle): The keyset handle to save.</span>
+</span><span id="L-79"><a href="#L-79"><span class="linenos"> 79</span></a><span class="sd">            path (str): Path where the keyset will be saved.</span>
+</span><span id="L-80"><a href="#L-80"><span class="linenos"> 80</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-81"><a href="#L-81"><span class="linenos"> 81</span></a>        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span><span id="L-82"><a href="#L-82"><span class="linenos"> 82</span></a>            <span class="n">tink</span><span class="o">.</span><span class="n">JsonKeysetWriter</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">keyset_handle</span><span class="o">.</span><span class="n">_keyset</span><span class="p">)</span>
+</span><span id="L-83"><a href="#L-83"><span class="linenos"> 83</span></a>
+</span><span id="L-84"><a href="#L-84"><span class="linenos"> 84</span></a>    <span class="nd">@staticmethod</span>
+</span><span id="L-85"><a href="#L-85"><span class="linenos"> 85</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">load_keyset</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tink</span><span class="o">.</span><span class="n">KeysetHandle</span><span class="p">:</span>
+</span><span id="L-86"><a href="#L-86"><span class="linenos"> 86</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Loads a keyset from a plaintext JSON file.</span>
+</span><span id="L-87"><a href="#L-87"><span class="linenos"> 87</span></a>
+</span><span id="L-88"><a href="#L-88"><span class="linenos"> 88</span></a><span class="sd">        Args:</span>
+</span><span id="L-89"><a href="#L-89"><span class="linenos"> 89</span></a><span class="sd">            path (str): Path to the keyset file.</span>
+</span><span id="L-90"><a href="#L-90"><span class="linenos"> 90</span></a>
+</span><span id="L-91"><a href="#L-91"><span class="linenos"> 91</span></a><span class="sd">        Returns:</span>
+</span><span id="L-92"><a href="#L-92"><span class="linenos"> 92</span></a><span class="sd">            tink.KeysetHandle: The loaded keyset handle.</span>
+</span><span id="L-93"><a href="#L-93"><span class="linenos"> 93</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-94"><a href="#L-94"><span class="linenos"> 94</span></a>        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span><span id="L-95"><a href="#L-95"><span class="linenos"> 95</span></a>            <span class="n">json_content</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span><span id="L-96"><a href="#L-96"><span class="linenos"> 96</span></a>        <span class="n">keyset_data</span> <span class="o">=</span> <span class="n">tink</span><span class="o">.</span><span class="n">JsonKeysetReader</span><span class="p">(</span><span class="n">json_content</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span><span id="L-97"><a href="#L-97"><span class="linenos"> 97</span></a>        <span class="k">return</span> <span class="n">tink</span><span class="o">.</span><span class="n">KeysetHandle</span><span class="o">.</span><span class="n">_create</span><span class="p">(</span><span class="n">keyset_data</span><span class="p">)</span>
+</span><span id="L-98"><a href="#L-98"><span class="linenos"> 98</span></a>
+</span><span id="L-99"><a href="#L-99"><span class="linenos"> 99</span></a>
+</span><span id="L-100"><a href="#L-100"><span class="linenos">100</span></a><span class="c1"># Example usage</span>
+</span><span id="L-101"><a href="#L-101"><span class="linenos">101</span></a><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+</span><span id="L-102"><a href="#L-102"><span class="linenos">102</span></a>    <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+</span><span id="L-103"><a href="#L-103"><span class="linenos">103</span></a>
+</span><span id="L-104"><a href="#L-104"><span class="linenos">104</span></a>    <span class="c1"># Check if a path to secret.txt is provided</span>
+</span><span id="L-105"><a href="#L-105"><span class="linenos">105</span></a>    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+</span><span id="L-106"><a href="#L-106"><span class="linenos">106</span></a>        <span class="n">secret_file</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</span><span id="L-107"><a href="#L-107"><span class="linenos">107</span></a>    <span class="k">else</span><span class="p">:</span>
+</span><span id="L-108"><a href="#L-108"><span class="linenos">108</span></a>        <span class="n">secret_file</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;Enter path to secret.txt: &quot;</span><span class="p">)</span>
+</span><span id="L-109"><a href="#L-109"><span class="linenos">109</span></a>
+</span><span id="L-110"><a href="#L-110"><span class="linenos">110</span></a>    <span class="c1"># Generate and save a new keyset (on first use)</span>
+</span><span id="L-111"><a href="#L-111"><span class="linenos">111</span></a>    <span class="n">keyset_handle</span> <span class="o">=</span> <span class="n">Encryption</span><span class="o">.</span><span class="n">gen_key</span><span class="p">()</span>
+</span><span id="L-112"><a href="#L-112"><span class="linenos">112</span></a>    <span class="n">Encryption</span><span class="o">.</span><span class="n">save_keyset</span><span class="p">(</span><span class="n">keyset_handle</span><span class="p">,</span> <span class="s2">&quot;mykey.json&quot;</span><span class="p">)</span>
+</span><span id="L-113"><a href="#L-113"><span class="linenos">113</span></a>
+</span><span id="L-114"><a href="#L-114"><span class="linenos">114</span></a>    <span class="c1"># Load the keyset for later use</span>
+</span><span id="L-115"><a href="#L-115"><span class="linenos">115</span></a>    <span class="n">keyset_handle</span> <span class="o">=</span> <span class="n">Encryption</span><span class="o">.</span><span class="n">load_keyset</span><span class="p">(</span><span class="s2">&quot;mykey.json&quot;</span><span class="p">)</span>
+</span><span id="L-116"><a href="#L-116"><span class="linenos">116</span></a>
+</span><span id="L-117"><a href="#L-117"><span class="linenos">117</span></a>    <span class="n">enc</span> <span class="o">=</span> <span class="n">Encryption</span><span class="p">()</span>
+</span><span id="L-118"><a href="#L-118"><span class="linenos">118</span></a>    <span class="n">enc</span><span class="o">.</span><span class="n">encrypt</span><span class="p">(</span><span class="n">secret_file</span><span class="p">,</span> <span class="n">keyset_handle</span><span class="p">)</span>  <span class="c1"># ciphertext binds to &#39;secret.txt&#39;</span>
+</span><span id="L-119"><a href="#L-119"><span class="linenos">119</span></a>    <span class="n">enc</span><span class="o">.</span><span class="n">decrypt</span><span class="p">(</span>
+</span><span id="L-120"><a href="#L-120"><span class="linenos">120</span></a>        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">secret_file</span><span class="si">}</span><span class="s2">.enc&quot;</span><span class="p">,</span> <span class="n">keyset_handle</span>
+</span><span id="L-121"><a href="#L-121"><span class="linenos">121</span></a>    <span class="p">)</span>  <span class="c1"># decryption requires &#39;secret.txt&#39; basename as context</span>
+</span><span id="L-122"><a href="#L-122"><span class="linenos">122</span></a>
+</span><span id="L-123"><a href="#L-123"><span class="linenos">123</span></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Encryption complete: </span><span class="si">{</span><span class="n">secret_file</span><span class="si">}</span><span class="s2">.enc&quot;</span><span class="p">)</span>
+</span><span id="L-124"><a href="#L-124"><span class="linenos">124</span></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Decryption complete: </span><span class="si">{</span><span class="n">secret_file</span><span class="si">}</span><span class="s2">.enc.dec&quot;</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -145,38 +236,91 @@
 
     </div>
     <a class="headerlink" href="#Encryption"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="Encryption-9"><a href="#Encryption-9"><span class="linenos"> 9</span></a><span class="k">class</span><span class="w"> </span><span class="nc">Encryption</span><span class="p">:</span>
-</span><span id="Encryption-10"><a href="#Encryption-10"><span class="linenos">10</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">encrypt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">keyset</span><span class="p">:</span> <span class="n">tink</span><span class="o">.</span><span class="n">KeysetHandle</span><span class="p">):</span>
-</span><span id="Encryption-11"><a href="#Encryption-11"><span class="linenos">11</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="Encryption-12"><a href="#Encryption-12"><span class="linenos">12</span></a><span class="sd">        Encrypt stored data.</span>
-</span><span id="Encryption-13"><a href="#Encryption-13"><span class="linenos">13</span></a>
-</span><span id="Encryption-14"><a href="#Encryption-14"><span class="linenos">14</span></a><span class="sd">        Args:</span>
-</span><span id="Encryption-15"><a href="#Encryption-15"><span class="linenos">15</span></a><span class="sd">            data (str): Path to the stored data.</span>
-</span><span id="Encryption-16"><a href="#Encryption-16"><span class="linenos">16</span></a><span class="sd">            keyset (tink.KeysetHandle): Handle to the keyset object containing the key.</span>
-</span><span id="Encryption-17"><a href="#Encryption-17"><span class="linenos">17</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="Encryption-18"><a href="#Encryption-18"><span class="linenos">18</span></a>        <span class="o">...</span>
-</span><span id="Encryption-19"><a href="#Encryption-19"><span class="linenos">19</span></a>
-</span><span id="Encryption-20"><a href="#Encryption-20"><span class="linenos">20</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">decrypt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enc_data</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">keyset</span><span class="p">:</span> <span class="n">tink</span><span class="o">.</span><span class="n">KeysetHandle</span><span class="p">):</span>
-</span><span id="Encryption-21"><a href="#Encryption-21"><span class="linenos">21</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="Encryption-22"><a href="#Encryption-22"><span class="linenos">22</span></a><span class="sd">        Decrypt stored encrypted data.</span>
-</span><span id="Encryption-23"><a href="#Encryption-23"><span class="linenos">23</span></a>
-</span><span id="Encryption-24"><a href="#Encryption-24"><span class="linenos">24</span></a><span class="sd">        Args:</span>
-</span><span id="Encryption-25"><a href="#Encryption-25"><span class="linenos">25</span></a><span class="sd">            enc_data (str): Path to the encrypted data.</span>
-</span><span id="Encryption-26"><a href="#Encryption-26"><span class="linenos">26</span></a><span class="sd">            keyset (tink.KeysetHandle): Handle to the keyset object containing the key.</span>
-</span><span id="Encryption-27"><a href="#Encryption-27"><span class="linenos">27</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="Encryption-28"><a href="#Encryption-28"><span class="linenos">28</span></a>        <span class="o">...</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Encryption-14"><a href="#Encryption-14"><span class="linenos">14</span></a><span class="k">class</span><span class="w"> </span><span class="nc">Encryption</span><span class="p">:</span>
+</span><span id="Encryption-15"><a href="#Encryption-15"><span class="linenos">15</span></a>    <span class="nd">@staticmethod</span>
+</span><span id="Encryption-16"><a href="#Encryption-16"><span class="linenos">16</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_get_aead_primitive</span><span class="p">(</span><span class="n">keyset_handle</span><span class="p">:</span> <span class="n">tink</span><span class="o">.</span><span class="n">KeysetHandle</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">aead</span><span class="o">.</span><span class="n">Aead</span><span class="p">:</span>
+</span><span id="Encryption-17"><a href="#Encryption-17"><span class="linenos">17</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets an AEAD primitive from a KeysetHandle.</span>
+</span><span id="Encryption-18"><a href="#Encryption-18"><span class="linenos">18</span></a>
+</span><span id="Encryption-19"><a href="#Encryption-19"><span class="linenos">19</span></a><span class="sd">        Args:</span>
+</span><span id="Encryption-20"><a href="#Encryption-20"><span class="linenos">20</span></a><span class="sd">            keyset_handle (tink.KeysetHandle): The handle to the keyset.</span>
+</span><span id="Encryption-21"><a href="#Encryption-21"><span class="linenos">21</span></a>
+</span><span id="Encryption-22"><a href="#Encryption-22"><span class="linenos">22</span></a><span class="sd">        Returns:</span>
+</span><span id="Encryption-23"><a href="#Encryption-23"><span class="linenos">23</span></a><span class="sd">            tink.aead.Aead: The AEAD primitive.</span>
+</span><span id="Encryption-24"><a href="#Encryption-24"><span class="linenos">24</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="Encryption-25"><a href="#Encryption-25"><span class="linenos">25</span></a>        <span class="k">return</span> <span class="n">keyset_handle</span><span class="o">.</span><span class="n">primitive</span><span class="p">(</span><span class="n">aead</span><span class="o">.</span><span class="n">Aead</span><span class="p">)</span>
+</span><span id="Encryption-26"><a href="#Encryption-26"><span class="linenos">26</span></a>
+</span><span id="Encryption-27"><a href="#Encryption-27"><span class="linenos">27</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">encrypt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">keyset_handle</span><span class="p">:</span> <span class="n">tink</span><span class="o">.</span><span class="n">KeysetHandle</span><span class="p">):</span>
+</span><span id="Encryption-28"><a href="#Encryption-28"><span class="linenos">28</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Encrypts stored data, binding to the file&#39;s basename as associated data.</span>
 </span><span id="Encryption-29"><a href="#Encryption-29"><span class="linenos">29</span></a>
-</span><span id="Encryption-30"><a href="#Encryption-30"><span class="linenos">30</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">gen_key</span><span class="p">():</span>
-</span><span id="Encryption-31"><a href="#Encryption-31"><span class="linenos">31</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="Encryption-32"><a href="#Encryption-32"><span class="linenos">32</span></a><span class="sd">        Generates a key for AEAD primitive, using AES256_GCM_SIV implementation.</span>
-</span><span id="Encryption-33"><a href="#Encryption-33"><span class="linenos">33</span></a>
-</span><span id="Encryption-34"><a href="#Encryption-34"><span class="linenos">34</span></a><span class="sd">        &gt; *AES128_GCM_SIV is nearly as fast as AES128_GCM. It has the same limits as</span>
-</span><span id="Encryption-35"><a href="#Encryption-35"><span class="linenos">35</span></a><span class="sd">        &gt; AES128_GCM on the number of messages and message size, but when these</span>
-</span><span id="Encryption-36"><a href="#Encryption-36"><span class="linenos">36</span></a><span class="sd">        &gt; limits are exceeded, it fails in a less catastrophic way: it may only leak</span>
-</span><span id="Encryption-37"><a href="#Encryption-37"><span class="linenos">37</span></a><span class="sd">        &gt; the fact that two messages are equal. This makes it safer to use than</span>
-</span><span id="Encryption-38"><a href="#Encryption-38"><span class="linenos">38</span></a><span class="sd">        &gt; AES128_GCM, but it is less widely used in practice.*</span>
-</span><span id="Encryption-39"><a href="#Encryption-39"><span class="linenos">39</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="Encryption-40"><a href="#Encryption-40"><span class="linenos">40</span></a>        <span class="o">...</span>
+</span><span id="Encryption-30"><a href="#Encryption-30"><span class="linenos">30</span></a><span class="sd">        Writes ciphertext to `data + &#39;.enc&#39;`.</span>
+</span><span id="Encryption-31"><a href="#Encryption-31"><span class="linenos">31</span></a>
+</span><span id="Encryption-32"><a href="#Encryption-32"><span class="linenos">32</span></a><span class="sd">        Args:</span>
+</span><span id="Encryption-33"><a href="#Encryption-33"><span class="linenos">33</span></a><span class="sd">            data (str): Path to the stored data to encrypt.</span>
+</span><span id="Encryption-34"><a href="#Encryption-34"><span class="linenos">34</span></a><span class="sd">            keyset_handle (tink.KeysetHandle): Handle to the keyset object containing the key.</span>
+</span><span id="Encryption-35"><a href="#Encryption-35"><span class="linenos">35</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="Encryption-36"><a href="#Encryption-36"><span class="linenos">36</span></a>        <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_aead_primitive</span><span class="p">(</span><span class="n">keyset_handle</span><span class="p">)</span>
+</span><span id="Encryption-37"><a href="#Encryption-37"><span class="linenos">37</span></a>        <span class="n">associated_data</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+</span><span id="Encryption-38"><a href="#Encryption-38"><span class="linenos">38</span></a>        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_in</span><span class="p">:</span>
+</span><span id="Encryption-39"><a href="#Encryption-39"><span class="linenos">39</span></a>            <span class="n">plaintext</span> <span class="o">=</span> <span class="n">f_in</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span><span id="Encryption-40"><a href="#Encryption-40"><span class="linenos">40</span></a>        <span class="n">ciphertext</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">encrypt</span><span class="p">(</span><span class="n">plaintext</span><span class="p">,</span> <span class="n">associated_data</span><span class="p">)</span>
+</span><span id="Encryption-41"><a href="#Encryption-41"><span class="linenos">41</span></a>        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">data</span> <span class="o">+</span> <span class="s2">&quot;.enc&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_out</span><span class="p">:</span>
+</span><span id="Encryption-42"><a href="#Encryption-42"><span class="linenos">42</span></a>            <span class="n">f_out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">ciphertext</span><span class="p">)</span>
+</span><span id="Encryption-43"><a href="#Encryption-43"><span class="linenos">43</span></a>
+</span><span id="Encryption-44"><a href="#Encryption-44"><span class="linenos">44</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">decrypt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enc_data</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">keyset_handle</span><span class="p">:</span> <span class="n">tink</span><span class="o">.</span><span class="n">KeysetHandle</span><span class="p">):</span>
+</span><span id="Encryption-45"><a href="#Encryption-45"><span class="linenos">45</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Decrypts stored encrypted data, using the original file&#39;s basename as associated data.</span>
+</span><span id="Encryption-46"><a href="#Encryption-46"><span class="linenos">46</span></a>
+</span><span id="Encryption-47"><a href="#Encryption-47"><span class="linenos">47</span></a><span class="sd">        Writes plaintext to `enc_data + &#39;.dec&#39;`.</span>
+</span><span id="Encryption-48"><a href="#Encryption-48"><span class="linenos">48</span></a>
+</span><span id="Encryption-49"><a href="#Encryption-49"><span class="linenos">49</span></a><span class="sd">        Args:</span>
+</span><span id="Encryption-50"><a href="#Encryption-50"><span class="linenos">50</span></a><span class="sd">            enc_data (str): Path to the encrypted data file.</span>
+</span><span id="Encryption-51"><a href="#Encryption-51"><span class="linenos">51</span></a><span class="sd">            keyset_handle (tink.KeysetHandle): Handle to the keyset object containing the key.</span>
+</span><span id="Encryption-52"><a href="#Encryption-52"><span class="linenos">52</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="Encryption-53"><a href="#Encryption-53"><span class="linenos">53</span></a>        <span class="c1"># Remove &#39;.enc&#39; extension to get original data filename for associated data</span>
+</span><span id="Encryption-54"><a href="#Encryption-54"><span class="linenos">54</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">enc_data</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.enc&quot;</span><span class="p">):</span>
+</span><span id="Encryption-55"><a href="#Encryption-55"><span class="linenos">55</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Encrypted file should have .enc extension&quot;</span><span class="p">)</span>
+</span><span id="Encryption-56"><a href="#Encryption-56"><span class="linenos">56</span></a>        <span class="n">basename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">enc_data</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">])</span>  <span class="c1"># Remove &#39;.enc&#39;</span>
+</span><span id="Encryption-57"><a href="#Encryption-57"><span class="linenos">57</span></a>        <span class="n">associated_data</span> <span class="o">=</span> <span class="n">basename</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+</span><span id="Encryption-58"><a href="#Encryption-58"><span class="linenos">58</span></a>        <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_aead_primitive</span><span class="p">(</span><span class="n">keyset_handle</span><span class="p">)</span>
+</span><span id="Encryption-59"><a href="#Encryption-59"><span class="linenos">59</span></a>        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">enc_data</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_in</span><span class="p">:</span>
+</span><span id="Encryption-60"><a href="#Encryption-60"><span class="linenos">60</span></a>            <span class="n">ciphertext</span> <span class="o">=</span> <span class="n">f_in</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span><span id="Encryption-61"><a href="#Encryption-61"><span class="linenos">61</span></a>        <span class="n">plaintext</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">decrypt</span><span class="p">(</span><span class="n">ciphertext</span><span class="p">,</span> <span class="n">associated_data</span><span class="p">)</span>
+</span><span id="Encryption-62"><a href="#Encryption-62"><span class="linenos">62</span></a>        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">enc_data</span> <span class="o">+</span> <span class="s2">&quot;.dec&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_out</span><span class="p">:</span>
+</span><span id="Encryption-63"><a href="#Encryption-63"><span class="linenos">63</span></a>            <span class="n">f_out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">plaintext</span><span class="p">)</span>
+</span><span id="Encryption-64"><a href="#Encryption-64"><span class="linenos">64</span></a>
+</span><span id="Encryption-65"><a href="#Encryption-65"><span class="linenos">65</span></a>    <span class="nd">@staticmethod</span>
+</span><span id="Encryption-66"><a href="#Encryption-66"><span class="linenos">66</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">gen_key</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">tink</span><span class="o">.</span><span class="n">KeysetHandle</span><span class="p">:</span>
+</span><span id="Encryption-67"><a href="#Encryption-67"><span class="linenos">67</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Generates a key for the AEAD primitive using AES256_GCM_SIV.</span>
+</span><span id="Encryption-68"><a href="#Encryption-68"><span class="linenos">68</span></a>
+</span><span id="Encryption-69"><a href="#Encryption-69"><span class="linenos">69</span></a><span class="sd">        Returns:</span>
+</span><span id="Encryption-70"><a href="#Encryption-70"><span class="linenos">70</span></a><span class="sd">            tink.KeysetHandle: The generated keyset handle.</span>
+</span><span id="Encryption-71"><a href="#Encryption-71"><span class="linenos">71</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="Encryption-72"><a href="#Encryption-72"><span class="linenos">72</span></a>        <span class="k">return</span> <span class="n">tink</span><span class="o">.</span><span class="n">new_keyset_handle</span><span class="p">(</span><span class="n">aead</span><span class="o">.</span><span class="n">aead_key_templates</span><span class="o">.</span><span class="n">AES256_GCM_SIV</span><span class="p">)</span>
+</span><span id="Encryption-73"><a href="#Encryption-73"><span class="linenos">73</span></a>
+</span><span id="Encryption-74"><a href="#Encryption-74"><span class="linenos">74</span></a>    <span class="nd">@staticmethod</span>
+</span><span id="Encryption-75"><a href="#Encryption-75"><span class="linenos">75</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">save_keyset</span><span class="p">(</span><span class="n">keyset_handle</span><span class="p">:</span> <span class="n">tink</span><span class="o">.</span><span class="n">KeysetHandle</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="Encryption-76"><a href="#Encryption-76"><span class="linenos">76</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Saves a keyset to a file in plaintext JSON format.</span>
+</span><span id="Encryption-77"><a href="#Encryption-77"><span class="linenos">77</span></a>
+</span><span id="Encryption-78"><a href="#Encryption-78"><span class="linenos">78</span></a><span class="sd">        Args:</span>
+</span><span id="Encryption-79"><a href="#Encryption-79"><span class="linenos">79</span></a><span class="sd">            keyset_handle (tink.KeysetHandle): The keyset handle to save.</span>
+</span><span id="Encryption-80"><a href="#Encryption-80"><span class="linenos">80</span></a><span class="sd">            path (str): Path where the keyset will be saved.</span>
+</span><span id="Encryption-81"><a href="#Encryption-81"><span class="linenos">81</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="Encryption-82"><a href="#Encryption-82"><span class="linenos">82</span></a>        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span><span id="Encryption-83"><a href="#Encryption-83"><span class="linenos">83</span></a>            <span class="n">tink</span><span class="o">.</span><span class="n">JsonKeysetWriter</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">keyset_handle</span><span class="o">.</span><span class="n">_keyset</span><span class="p">)</span>
+</span><span id="Encryption-84"><a href="#Encryption-84"><span class="linenos">84</span></a>
+</span><span id="Encryption-85"><a href="#Encryption-85"><span class="linenos">85</span></a>    <span class="nd">@staticmethod</span>
+</span><span id="Encryption-86"><a href="#Encryption-86"><span class="linenos">86</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">load_keyset</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tink</span><span class="o">.</span><span class="n">KeysetHandle</span><span class="p">:</span>
+</span><span id="Encryption-87"><a href="#Encryption-87"><span class="linenos">87</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Loads a keyset from a plaintext JSON file.</span>
+</span><span id="Encryption-88"><a href="#Encryption-88"><span class="linenos">88</span></a>
+</span><span id="Encryption-89"><a href="#Encryption-89"><span class="linenos">89</span></a><span class="sd">        Args:</span>
+</span><span id="Encryption-90"><a href="#Encryption-90"><span class="linenos">90</span></a><span class="sd">            path (str): Path to the keyset file.</span>
+</span><span id="Encryption-91"><a href="#Encryption-91"><span class="linenos">91</span></a>
+</span><span id="Encryption-92"><a href="#Encryption-92"><span class="linenos">92</span></a><span class="sd">        Returns:</span>
+</span><span id="Encryption-93"><a href="#Encryption-93"><span class="linenos">93</span></a><span class="sd">            tink.KeysetHandle: The loaded keyset handle.</span>
+</span><span id="Encryption-94"><a href="#Encryption-94"><span class="linenos">94</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="Encryption-95"><a href="#Encryption-95"><span class="linenos">95</span></a>        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span><span id="Encryption-96"><a href="#Encryption-96"><span class="linenos">96</span></a>            <span class="n">json_content</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span><span id="Encryption-97"><a href="#Encryption-97"><span class="linenos">97</span></a>        <span class="n">keyset_data</span> <span class="o">=</span> <span class="n">tink</span><span class="o">.</span><span class="n">JsonKeysetReader</span><span class="p">(</span><span class="n">json_content</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span><span id="Encryption-98"><a href="#Encryption-98"><span class="linenos">98</span></a>        <span class="k">return</span> <span class="n">tink</span><span class="o">.</span><span class="n">KeysetHandle</span><span class="o">.</span><span class="n">_create</span><span class="p">(</span><span class="n">keyset_data</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -187,31 +331,40 @@
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">encrypt</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">data</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">keyset</span><span class="p">:</span> <span class="n">tink</span><span class="o">.</span><span class="n">_keyset_handle</span><span class="o">.</span><span class="n">KeysetHandle</span></span><span class="return-annotation">):</span></span>
+        <span class="name">encrypt</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">data</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">keyset_handle</span><span class="p">:</span> <span class="n">tink</span><span class="o">.</span><span class="n">_keyset_handle</span><span class="o">.</span><span class="n">KeysetHandle</span></span><span class="return-annotation">):</span></span>
 
                 <label class="view-source-button" for="Encryption.encrypt-view-source"><span>View Source</span></label>
 
     </div>
     <a class="headerlink" href="#Encryption.encrypt"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="Encryption.encrypt-10"><a href="#Encryption.encrypt-10"><span class="linenos">10</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">encrypt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">keyset</span><span class="p">:</span> <span class="n">tink</span><span class="o">.</span><span class="n">KeysetHandle</span><span class="p">):</span>
-</span><span id="Encryption.encrypt-11"><a href="#Encryption.encrypt-11"><span class="linenos">11</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="Encryption.encrypt-12"><a href="#Encryption.encrypt-12"><span class="linenos">12</span></a><span class="sd">        Encrypt stored data.</span>
-</span><span id="Encryption.encrypt-13"><a href="#Encryption.encrypt-13"><span class="linenos">13</span></a>
-</span><span id="Encryption.encrypt-14"><a href="#Encryption.encrypt-14"><span class="linenos">14</span></a><span class="sd">        Args:</span>
-</span><span id="Encryption.encrypt-15"><a href="#Encryption.encrypt-15"><span class="linenos">15</span></a><span class="sd">            data (str): Path to the stored data.</span>
-</span><span id="Encryption.encrypt-16"><a href="#Encryption.encrypt-16"><span class="linenos">16</span></a><span class="sd">            keyset (tink.KeysetHandle): Handle to the keyset object containing the key.</span>
-</span><span id="Encryption.encrypt-17"><a href="#Encryption.encrypt-17"><span class="linenos">17</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="Encryption.encrypt-18"><a href="#Encryption.encrypt-18"><span class="linenos">18</span></a>        <span class="o">...</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Encryption.encrypt-27"><a href="#Encryption.encrypt-27"><span class="linenos">27</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">encrypt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">keyset_handle</span><span class="p">:</span> <span class="n">tink</span><span class="o">.</span><span class="n">KeysetHandle</span><span class="p">):</span>
+</span><span id="Encryption.encrypt-28"><a href="#Encryption.encrypt-28"><span class="linenos">28</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Encrypts stored data, binding to the file&#39;s basename as associated data.</span>
+</span><span id="Encryption.encrypt-29"><a href="#Encryption.encrypt-29"><span class="linenos">29</span></a>
+</span><span id="Encryption.encrypt-30"><a href="#Encryption.encrypt-30"><span class="linenos">30</span></a><span class="sd">        Writes ciphertext to `data + &#39;.enc&#39;`.</span>
+</span><span id="Encryption.encrypt-31"><a href="#Encryption.encrypt-31"><span class="linenos">31</span></a>
+</span><span id="Encryption.encrypt-32"><a href="#Encryption.encrypt-32"><span class="linenos">32</span></a><span class="sd">        Args:</span>
+</span><span id="Encryption.encrypt-33"><a href="#Encryption.encrypt-33"><span class="linenos">33</span></a><span class="sd">            data (str): Path to the stored data to encrypt.</span>
+</span><span id="Encryption.encrypt-34"><a href="#Encryption.encrypt-34"><span class="linenos">34</span></a><span class="sd">            keyset_handle (tink.KeysetHandle): Handle to the keyset object containing the key.</span>
+</span><span id="Encryption.encrypt-35"><a href="#Encryption.encrypt-35"><span class="linenos">35</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="Encryption.encrypt-36"><a href="#Encryption.encrypt-36"><span class="linenos">36</span></a>        <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_aead_primitive</span><span class="p">(</span><span class="n">keyset_handle</span><span class="p">)</span>
+</span><span id="Encryption.encrypt-37"><a href="#Encryption.encrypt-37"><span class="linenos">37</span></a>        <span class="n">associated_data</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+</span><span id="Encryption.encrypt-38"><a href="#Encryption.encrypt-38"><span class="linenos">38</span></a>        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_in</span><span class="p">:</span>
+</span><span id="Encryption.encrypt-39"><a href="#Encryption.encrypt-39"><span class="linenos">39</span></a>            <span class="n">plaintext</span> <span class="o">=</span> <span class="n">f_in</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span><span id="Encryption.encrypt-40"><a href="#Encryption.encrypt-40"><span class="linenos">40</span></a>        <span class="n">ciphertext</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">encrypt</span><span class="p">(</span><span class="n">plaintext</span><span class="p">,</span> <span class="n">associated_data</span><span class="p">)</span>
+</span><span id="Encryption.encrypt-41"><a href="#Encryption.encrypt-41"><span class="linenos">41</span></a>        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">data</span> <span class="o">+</span> <span class="s2">&quot;.enc&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_out</span><span class="p">:</span>
+</span><span id="Encryption.encrypt-42"><a href="#Encryption.encrypt-42"><span class="linenos">42</span></a>            <span class="n">f_out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">ciphertext</span><span class="p">)</span>
 </span></pre></div>
 
 
-            <div class="docstring"><p>Encrypt stored data.</p>
+            <div class="docstring"><p>Encrypts stored data, binding to the file's basename as associated data.</p>
+
+<p>Writes ciphertext to <code>data + '.enc'</code>.</p>
 
 <h6 id="arguments">Arguments:</h6>
 
 <ul>
-<li><strong>data (str):</strong>  Path to the stored data.</li>
-<li><strong>keyset (tink.KeysetHandle):</strong>  Handle to the keyset object containing the key.</li>
+<li><strong>data (str):</strong>  Path to the stored data to encrypt.</li>
+<li><strong>keyset_handle (tink.KeysetHandle):</strong>  Handle to the keyset object containing the key.</li>
 </ul>
 </div>
 
@@ -222,31 +375,44 @@
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">decrypt</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">enc_data</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">keyset</span><span class="p">:</span> <span class="n">tink</span><span class="o">.</span><span class="n">_keyset_handle</span><span class="o">.</span><span class="n">KeysetHandle</span></span><span class="return-annotation">):</span></span>
+        <span class="name">decrypt</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">enc_data</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">keyset_handle</span><span class="p">:</span> <span class="n">tink</span><span class="o">.</span><span class="n">_keyset_handle</span><span class="o">.</span><span class="n">KeysetHandle</span></span><span class="return-annotation">):</span></span>
 
                 <label class="view-source-button" for="Encryption.decrypt-view-source"><span>View Source</span></label>
 
     </div>
     <a class="headerlink" href="#Encryption.decrypt"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="Encryption.decrypt-20"><a href="#Encryption.decrypt-20"><span class="linenos">20</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">decrypt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enc_data</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">keyset</span><span class="p">:</span> <span class="n">tink</span><span class="o">.</span><span class="n">KeysetHandle</span><span class="p">):</span>
-</span><span id="Encryption.decrypt-21"><a href="#Encryption.decrypt-21"><span class="linenos">21</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="Encryption.decrypt-22"><a href="#Encryption.decrypt-22"><span class="linenos">22</span></a><span class="sd">        Decrypt stored encrypted data.</span>
-</span><span id="Encryption.decrypt-23"><a href="#Encryption.decrypt-23"><span class="linenos">23</span></a>
-</span><span id="Encryption.decrypt-24"><a href="#Encryption.decrypt-24"><span class="linenos">24</span></a><span class="sd">        Args:</span>
-</span><span id="Encryption.decrypt-25"><a href="#Encryption.decrypt-25"><span class="linenos">25</span></a><span class="sd">            enc_data (str): Path to the encrypted data.</span>
-</span><span id="Encryption.decrypt-26"><a href="#Encryption.decrypt-26"><span class="linenos">26</span></a><span class="sd">            keyset (tink.KeysetHandle): Handle to the keyset object containing the key.</span>
-</span><span id="Encryption.decrypt-27"><a href="#Encryption.decrypt-27"><span class="linenos">27</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="Encryption.decrypt-28"><a href="#Encryption.decrypt-28"><span class="linenos">28</span></a>        <span class="o">...</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Encryption.decrypt-44"><a href="#Encryption.decrypt-44"><span class="linenos">44</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">decrypt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enc_data</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">keyset_handle</span><span class="p">:</span> <span class="n">tink</span><span class="o">.</span><span class="n">KeysetHandle</span><span class="p">):</span>
+</span><span id="Encryption.decrypt-45"><a href="#Encryption.decrypt-45"><span class="linenos">45</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Decrypts stored encrypted data, using the original file&#39;s basename as associated data.</span>
+</span><span id="Encryption.decrypt-46"><a href="#Encryption.decrypt-46"><span class="linenos">46</span></a>
+</span><span id="Encryption.decrypt-47"><a href="#Encryption.decrypt-47"><span class="linenos">47</span></a><span class="sd">        Writes plaintext to `enc_data + &#39;.dec&#39;`.</span>
+</span><span id="Encryption.decrypt-48"><a href="#Encryption.decrypt-48"><span class="linenos">48</span></a>
+</span><span id="Encryption.decrypt-49"><a href="#Encryption.decrypt-49"><span class="linenos">49</span></a><span class="sd">        Args:</span>
+</span><span id="Encryption.decrypt-50"><a href="#Encryption.decrypt-50"><span class="linenos">50</span></a><span class="sd">            enc_data (str): Path to the encrypted data file.</span>
+</span><span id="Encryption.decrypt-51"><a href="#Encryption.decrypt-51"><span class="linenos">51</span></a><span class="sd">            keyset_handle (tink.KeysetHandle): Handle to the keyset object containing the key.</span>
+</span><span id="Encryption.decrypt-52"><a href="#Encryption.decrypt-52"><span class="linenos">52</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="Encryption.decrypt-53"><a href="#Encryption.decrypt-53"><span class="linenos">53</span></a>        <span class="c1"># Remove &#39;.enc&#39; extension to get original data filename for associated data</span>
+</span><span id="Encryption.decrypt-54"><a href="#Encryption.decrypt-54"><span class="linenos">54</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">enc_data</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.enc&quot;</span><span class="p">):</span>
+</span><span id="Encryption.decrypt-55"><a href="#Encryption.decrypt-55"><span class="linenos">55</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Encrypted file should have .enc extension&quot;</span><span class="p">)</span>
+</span><span id="Encryption.decrypt-56"><a href="#Encryption.decrypt-56"><span class="linenos">56</span></a>        <span class="n">basename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">enc_data</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">])</span>  <span class="c1"># Remove &#39;.enc&#39;</span>
+</span><span id="Encryption.decrypt-57"><a href="#Encryption.decrypt-57"><span class="linenos">57</span></a>        <span class="n">associated_data</span> <span class="o">=</span> <span class="n">basename</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+</span><span id="Encryption.decrypt-58"><a href="#Encryption.decrypt-58"><span class="linenos">58</span></a>        <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_aead_primitive</span><span class="p">(</span><span class="n">keyset_handle</span><span class="p">)</span>
+</span><span id="Encryption.decrypt-59"><a href="#Encryption.decrypt-59"><span class="linenos">59</span></a>        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">enc_data</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_in</span><span class="p">:</span>
+</span><span id="Encryption.decrypt-60"><a href="#Encryption.decrypt-60"><span class="linenos">60</span></a>            <span class="n">ciphertext</span> <span class="o">=</span> <span class="n">f_in</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span><span id="Encryption.decrypt-61"><a href="#Encryption.decrypt-61"><span class="linenos">61</span></a>        <span class="n">plaintext</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">decrypt</span><span class="p">(</span><span class="n">ciphertext</span><span class="p">,</span> <span class="n">associated_data</span><span class="p">)</span>
+</span><span id="Encryption.decrypt-62"><a href="#Encryption.decrypt-62"><span class="linenos">62</span></a>        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">enc_data</span> <span class="o">+</span> <span class="s2">&quot;.dec&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_out</span><span class="p">:</span>
+</span><span id="Encryption.decrypt-63"><a href="#Encryption.decrypt-63"><span class="linenos">63</span></a>            <span class="n">f_out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">plaintext</span><span class="p">)</span>
 </span></pre></div>
 
 
-            <div class="docstring"><p>Decrypt stored encrypted data.</p>
+            <div class="docstring"><p>Decrypts stored encrypted data, using the original file's basename as associated data.</p>
+
+<p>Writes plaintext to <code>enc_data + '.dec'</code>.</p>
 
 <h6 id="arguments">Arguments:</h6>
 
 <ul>
-<li><strong>enc_data (str):</strong>  Path to the encrypted data.</li>
-<li><strong>keyset (tink.KeysetHandle):</strong>  Handle to the keyset object containing the key.</li>
+<li><strong>enc_data (str):</strong>  Path to the encrypted data file.</li>
+<li><strong>keyset_handle (tink.KeysetHandle):</strong>  Handle to the keyset object containing the key.</li>
 </ul>
 </div>
 
@@ -255,36 +421,115 @@
                             <div id="Encryption.gen_key" class="classattr">
                                         <input id="Encryption.gen_key-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
 <div class="attr function">
-            
+                    <div class="decorator decorator-staticmethod">@staticmethod</div>
+
         <span class="def">def</span>
-        <span class="name">gen_key</span><span class="signature pdoc-code condensed">(<span class="return-annotation">):</span></span>
+        <span class="name">gen_key</span><span class="signature pdoc-code condensed">(<span class="return-annotation">) -> <span class="n">tink</span><span class="o">.</span><span class="n">_keyset_handle</span><span class="o">.</span><span class="n">KeysetHandle</span>:</span></span>
 
                 <label class="view-source-button" for="Encryption.gen_key-view-source"><span>View Source</span></label>
 
     </div>
     <a class="headerlink" href="#Encryption.gen_key"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="Encryption.gen_key-30"><a href="#Encryption.gen_key-30"><span class="linenos">30</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">gen_key</span><span class="p">():</span>
-</span><span id="Encryption.gen_key-31"><a href="#Encryption.gen_key-31"><span class="linenos">31</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="Encryption.gen_key-32"><a href="#Encryption.gen_key-32"><span class="linenos">32</span></a><span class="sd">        Generates a key for AEAD primitive, using AES256_GCM_SIV implementation.</span>
-</span><span id="Encryption.gen_key-33"><a href="#Encryption.gen_key-33"><span class="linenos">33</span></a>
-</span><span id="Encryption.gen_key-34"><a href="#Encryption.gen_key-34"><span class="linenos">34</span></a><span class="sd">        &gt; *AES128_GCM_SIV is nearly as fast as AES128_GCM. It has the same limits as</span>
-</span><span id="Encryption.gen_key-35"><a href="#Encryption.gen_key-35"><span class="linenos">35</span></a><span class="sd">        &gt; AES128_GCM on the number of messages and message size, but when these</span>
-</span><span id="Encryption.gen_key-36"><a href="#Encryption.gen_key-36"><span class="linenos">36</span></a><span class="sd">        &gt; limits are exceeded, it fails in a less catastrophic way: it may only leak</span>
-</span><span id="Encryption.gen_key-37"><a href="#Encryption.gen_key-37"><span class="linenos">37</span></a><span class="sd">        &gt; the fact that two messages are equal. This makes it safer to use than</span>
-</span><span id="Encryption.gen_key-38"><a href="#Encryption.gen_key-38"><span class="linenos">38</span></a><span class="sd">        &gt; AES128_GCM, but it is less widely used in practice.*</span>
-</span><span id="Encryption.gen_key-39"><a href="#Encryption.gen_key-39"><span class="linenos">39</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="Encryption.gen_key-40"><a href="#Encryption.gen_key-40"><span class="linenos">40</span></a>        <span class="o">...</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Encryption.gen_key-65"><a href="#Encryption.gen_key-65"><span class="linenos">65</span></a>    <span class="nd">@staticmethod</span>
+</span><span id="Encryption.gen_key-66"><a href="#Encryption.gen_key-66"><span class="linenos">66</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">gen_key</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">tink</span><span class="o">.</span><span class="n">KeysetHandle</span><span class="p">:</span>
+</span><span id="Encryption.gen_key-67"><a href="#Encryption.gen_key-67"><span class="linenos">67</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Generates a key for the AEAD primitive using AES256_GCM_SIV.</span>
+</span><span id="Encryption.gen_key-68"><a href="#Encryption.gen_key-68"><span class="linenos">68</span></a>
+</span><span id="Encryption.gen_key-69"><a href="#Encryption.gen_key-69"><span class="linenos">69</span></a><span class="sd">        Returns:</span>
+</span><span id="Encryption.gen_key-70"><a href="#Encryption.gen_key-70"><span class="linenos">70</span></a><span class="sd">            tink.KeysetHandle: The generated keyset handle.</span>
+</span><span id="Encryption.gen_key-71"><a href="#Encryption.gen_key-71"><span class="linenos">71</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="Encryption.gen_key-72"><a href="#Encryption.gen_key-72"><span class="linenos">72</span></a>        <span class="k">return</span> <span class="n">tink</span><span class="o">.</span><span class="n">new_keyset_handle</span><span class="p">(</span><span class="n">aead</span><span class="o">.</span><span class="n">aead_key_templates</span><span class="o">.</span><span class="n">AES256_GCM_SIV</span><span class="p">)</span>
 </span></pre></div>
 
 
-            <div class="docstring"><p>Generates a key for AEAD primitive, using AES256_GCM_SIV implementation.</p>
+            <div class="docstring"><p>Generates a key for the AEAD primitive using AES256_GCM_SIV.</p>
+
+<h6 id="returns">Returns:</h6>
 
 <blockquote>
-  <p><em>AES128_GCM_SIV is nearly as fast as AES128_GCM. It has the same limits as
-  AES128_GCM on the number of messages and message size, but when these
-  limits are exceeded, it fails in a less catastrophic way: it may only leak
-  the fact that two messages are equal. This makes it safer to use than
-  AES128_GCM, but it is less widely used in practice.</em></p>
+  <p>tink.KeysetHandle: The generated keyset handle.</p>
+</blockquote>
+</div>
+
+
+                            </div>
+                            <div id="Encryption.save_keyset" class="classattr">
+                                        <input id="Encryption.save_keyset-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+                    <div class="decorator decorator-staticmethod">@staticmethod</div>
+
+        <span class="def">def</span>
+        <span class="name">save_keyset</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">keyset_handle</span><span class="p">:</span> <span class="n">tink</span><span class="o">.</span><span class="n">_keyset_handle</span><span class="o">.</span><span class="n">KeysetHandle</span>, </span><span class="param"><span class="n">path</span><span class="p">:</span> <span class="nb">str</span></span><span class="return-annotation">):</span></span>
+
+                <label class="view-source-button" for="Encryption.save_keyset-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#Encryption.save_keyset"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Encryption.save_keyset-74"><a href="#Encryption.save_keyset-74"><span class="linenos">74</span></a>    <span class="nd">@staticmethod</span>
+</span><span id="Encryption.save_keyset-75"><a href="#Encryption.save_keyset-75"><span class="linenos">75</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">save_keyset</span><span class="p">(</span><span class="n">keyset_handle</span><span class="p">:</span> <span class="n">tink</span><span class="o">.</span><span class="n">KeysetHandle</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="Encryption.save_keyset-76"><a href="#Encryption.save_keyset-76"><span class="linenos">76</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Saves a keyset to a file in plaintext JSON format.</span>
+</span><span id="Encryption.save_keyset-77"><a href="#Encryption.save_keyset-77"><span class="linenos">77</span></a>
+</span><span id="Encryption.save_keyset-78"><a href="#Encryption.save_keyset-78"><span class="linenos">78</span></a><span class="sd">        Args:</span>
+</span><span id="Encryption.save_keyset-79"><a href="#Encryption.save_keyset-79"><span class="linenos">79</span></a><span class="sd">            keyset_handle (tink.KeysetHandle): The keyset handle to save.</span>
+</span><span id="Encryption.save_keyset-80"><a href="#Encryption.save_keyset-80"><span class="linenos">80</span></a><span class="sd">            path (str): Path where the keyset will be saved.</span>
+</span><span id="Encryption.save_keyset-81"><a href="#Encryption.save_keyset-81"><span class="linenos">81</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="Encryption.save_keyset-82"><a href="#Encryption.save_keyset-82"><span class="linenos">82</span></a>        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span><span id="Encryption.save_keyset-83"><a href="#Encryption.save_keyset-83"><span class="linenos">83</span></a>            <span class="n">tink</span><span class="o">.</span><span class="n">JsonKeysetWriter</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">keyset_handle</span><span class="o">.</span><span class="n">_keyset</span><span class="p">)</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Saves a keyset to a file in plaintext JSON format.</p>
+
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>keyset_handle (tink.KeysetHandle):</strong>  The keyset handle to save.</li>
+<li><strong>path (str):</strong>  Path where the keyset will be saved.</li>
+</ul>
+</div>
+
+
+                            </div>
+                            <div id="Encryption.load_keyset" class="classattr">
+                                        <input id="Encryption.load_keyset-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+                    <div class="decorator decorator-staticmethod">@staticmethod</div>
+
+        <span class="def">def</span>
+        <span class="name">load_keyset</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">path</span><span class="p">:</span> <span class="nb">str</span></span><span class="return-annotation">) -> <span class="n">tink</span><span class="o">.</span><span class="n">_keyset_handle</span><span class="o">.</span><span class="n">KeysetHandle</span>:</span></span>
+
+                <label class="view-source-button" for="Encryption.load_keyset-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#Encryption.load_keyset"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Encryption.load_keyset-85"><a href="#Encryption.load_keyset-85"><span class="linenos">85</span></a>    <span class="nd">@staticmethod</span>
+</span><span id="Encryption.load_keyset-86"><a href="#Encryption.load_keyset-86"><span class="linenos">86</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">load_keyset</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tink</span><span class="o">.</span><span class="n">KeysetHandle</span><span class="p">:</span>
+</span><span id="Encryption.load_keyset-87"><a href="#Encryption.load_keyset-87"><span class="linenos">87</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Loads a keyset from a plaintext JSON file.</span>
+</span><span id="Encryption.load_keyset-88"><a href="#Encryption.load_keyset-88"><span class="linenos">88</span></a>
+</span><span id="Encryption.load_keyset-89"><a href="#Encryption.load_keyset-89"><span class="linenos">89</span></a><span class="sd">        Args:</span>
+</span><span id="Encryption.load_keyset-90"><a href="#Encryption.load_keyset-90"><span class="linenos">90</span></a><span class="sd">            path (str): Path to the keyset file.</span>
+</span><span id="Encryption.load_keyset-91"><a href="#Encryption.load_keyset-91"><span class="linenos">91</span></a>
+</span><span id="Encryption.load_keyset-92"><a href="#Encryption.load_keyset-92"><span class="linenos">92</span></a><span class="sd">        Returns:</span>
+</span><span id="Encryption.load_keyset-93"><a href="#Encryption.load_keyset-93"><span class="linenos">93</span></a><span class="sd">            tink.KeysetHandle: The loaded keyset handle.</span>
+</span><span id="Encryption.load_keyset-94"><a href="#Encryption.load_keyset-94"><span class="linenos">94</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="Encryption.load_keyset-95"><a href="#Encryption.load_keyset-95"><span class="linenos">95</span></a>        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span><span id="Encryption.load_keyset-96"><a href="#Encryption.load_keyset-96"><span class="linenos">96</span></a>            <span class="n">json_content</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span><span id="Encryption.load_keyset-97"><a href="#Encryption.load_keyset-97"><span class="linenos">97</span></a>        <span class="n">keyset_data</span> <span class="o">=</span> <span class="n">tink</span><span class="o">.</span><span class="n">JsonKeysetReader</span><span class="p">(</span><span class="n">json_content</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span><span id="Encryption.load_keyset-98"><a href="#Encryption.load_keyset-98"><span class="linenos">98</span></a>        <span class="k">return</span> <span class="n">tink</span><span class="o">.</span><span class="n">KeysetHandle</span><span class="o">.</span><span class="n">_create</span><span class="p">(</span><span class="n">keyset_data</span><span class="p">)</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Loads a keyset from a plaintext JSON file.</p>
+
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>path (str):</strong>  Path to the keyset file.</li>
+</ul>
+
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>tink.KeysetHandle: The loaded keyset handle.</p>
 </blockquote>
 </div>
 
