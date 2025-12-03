@@ -1,0 +1,16 @@
+# Cryptography Manager - Sample Configuration
+# This file demonstrates the configuration options available
+
+# General settings
+general:
+  debug: false
+
+# Differential Privacy settings
+differential_privacy:
+  default_mechanism: laplace
+  default_epsilon: 1.0
+  default_delta: 1e-5
+  max_epsilon: 10.0
+  min_epsilon: 0.1
+  privacy_budget_limit: 100.0
+  noise_scale_factor: 1.0
