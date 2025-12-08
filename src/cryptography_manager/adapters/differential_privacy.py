@@ -93,3 +93,33 @@ class DifferentialPrivacyAdapter:
 
         except Exception as e:
             raise ImportError(f"Failed to initialize PyDP backend: {e}")
+
+    def count(self, data: np.ndarray):
+        """Compute dp count.
+
+        Args:
+            data (np.ndarray): A numpy array of the data to count
+
+        Returns:
+            float: DP count
+        """
+        from pydp.algorithms.laplacian import Count
+
+        return Count(self.params.epsilon).quick_result(data.tolist())
+
+    def max(self, data: np.ndarray):
+        """Compute dp max.
+
+        Args:
+            data (np.ndarray): A numpy array of the data to count
+
+        Returns:
+            float: DP max
+        """
+        from pydp.algorithms.laplacian import Max
+
+        return Max(
+            epsilon=self.params.epsilon,
+            lower_bound=int(data.mean()),
+            upper_bound=int(data.max()),
+        ).quick_result(data.tolist())
