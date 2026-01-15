@@ -61,7 +61,4 @@ class CryptographyManager:
             )
 
     def differential_privacy(self) -> DifferentialPrivacyAdapter:
-
-        
-
         return

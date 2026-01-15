@@ -12,6 +12,16 @@ from typing import Any, final
 import numpy as np
 import pandas as pd
 from loguru import logger
+from pydp.algorithms.laplacian import (
+    BoundedMean,
+    BoundedStandardDeviation,
+    BoundedSum,
+    BoundedVariance,
+    Count,
+    Max,
+    Median,
+    Min,
+)
 
 from ..config import DEFAULT_CONFIG, Config
 from ..exceptions import (
@@ -73,253 +83,109 @@ class PrivacyBudget:
 class DifferentialPrivacyAdapter:
     """Class implementation for CM's differential privacy adapter."""
 
-    def __init__(
-        self,
-        config: Config,
-        epsilon: float,
-        delta: float | None = None,
-        mechanism: str | None = None,
-    ):
-        """Differential privacy adapter constructor.
+    _QUERY_MAP = {
+        "Count": Count,
+        "Max": Max,
+        "Min": Min,
+        "Median": Median,
+        "BoundedMean": BoundedMean,
+        "BoundedSum": BoundedSum,
+        "BoundedStandardDeviation": BoundedStandardDeviation,
+        "BoundedVariance": BoundedVariance,
+    }
 
-        Args:
-            config (Config): A Config instance to get the DP-specific configuration.
-        """
-
-        defaults: dict[str, Any] = DEFAULT_CONFIG["differential_privacy"]
-
-        # Setup configuration
+    def __init__(self, config: Config):
         try:
-            self.config: dict[str, Any] = config.get_submodule_config(
-                "differential_privacy"
-            )
+            self.config = config.get_submodule_config("differential_privacy")
 
-            # Setup privacy parameters
-            if not mechanism:
-                mechanism: str = self.config["default_mechanism"]
+            self.mechanism = self.config["default_mechanism"]
+            self.delta = self.config.get("default_delta")
 
-            # Check epsilon
-            min_epsilon = self.config.get(
-                "min_epsilon", defaults["min_epsilon"]
-            )
-            max_epsilon = self.config.get(
-                "max_epsilon", defaults["max_epsilon"]
-            )
-            if epsilon < min_epsilon or epsilon > max_epsilon:
+            # ---- GLOBAL BUDGET ----
+            self.global_budget = self.config["privacy_budget_limit"]
+
+            # ---- QUERY PLAN ----
+            self.queries = self.config.get("queries", [])
+            if not self.queries:
+                raise ConfigurationError("No DP queries configured")
+
+            requested_epsilon = sum(q["epsilon"] for q in self.queries)
+            if requested_epsilon > self.global_budget:
                 raise DifferentialPrivacyError(
-                    f"Epsilon must be between {min_epsilon} and {max_epsilon}, \
-                    got {epsilon}",
-                    mechanism=mechanism,
+                    f"Total query epsilon {requested_epsilon} exceeds "
+                    f"global budget {self.global_budget}",
+                    mechanism=self.mechanism,
                 )
 
-            if not delta:
-                delta = self.config["default_delta"]
-
-            self.budget = PrivacyBudget(epsilon, delta, mechanism)
-
-            logger.info("DP adapter configured successfully")
-
-        except Exception as e:
-            raise ConfigurationError(
-                f"Failed initialization based on config: {e}"
+            self.budget = PrivacyBudget(
+                total_epsilon=self.global_budget,
+                delta=self.delta,
+                mechanism=self.mechanism,
             )
 
-        # PyDP initialization
+            # ---- DATA BOUNDS ----
+            data_cfg = self.config["data"]
+            self.lower_bound = data_cfg["lower_bound"]
+            self.upper_bound = data_cfg["upper_bound"]
+
+            logger.info(
+                f"DP adapter initialized: "
+                f"ε_total={self.global_budget}, "
+                f"ε_planned={requested_epsilon}"
+            )
+
+        except Exception as e:
+            raise ConfigurationError(f"DP adapter init failed: {e}")
+
         try:
-            import pydp as dp
+            import pydp
 
-            logger.info("PyDP backend initialized successfully")
-
+            logger.info("PyDP backend initialized")
         except Exception as e:
             raise ImportError(f"Failed to initialize PyDP backend: {e}")
 
-    def _consume_budget(self, epsilon: float) -> float:
+    def execute_all(self, data: np.ndarray) -> dict[str, int | float]:
+        """
+        Execute all configured DP queries in order.
+        """
+        results = {}
+
+        for query in self.queries:
+            result = self._execute_single_query(
+                qtype=query["type"],
+                epsilon=query["epsilon"],
+                data=data,
+            )
+            results[query["name"]] = result
+
+        return results
+
+    def _execute_single_query(
+        self,
+        qtype: str,
+        epsilon: float,
+        data: np.ndarray,
+    ) -> int | float:
+        """
+        Execute a single DP query using the registry.
+        """
+
+        if qtype not in self._QUERY_MAP:
+            raise DifferentialPrivacyError(
+                f"Unsupported DP query type: {qtype}",
+                mechanism=self.mechanism,
+            )
+
+        # Spend budget first
         self.budget.spend(epsilon)
-        logger.debug(
-            f"Spent ε={epsilon}, remaining ε={self.budget.remaining_epsilon}"
-        )
-        return epsilon
 
-    ########################## Statistics functions ###########################
+        algo_cls = self._QUERY_MAP[qtype]
 
-    def Count(self, data: np.ndarray, epsilon: float) -> int | float:
-        """Compute dp count.
+        if qtype == "Count":
+            return algo_cls(epsilon).quick_result(data.tolist())
 
-        Args:
-            data (np.ndarray): A numpy array of the data to count
-
-        Returns:
-            int | float: DP count
-        """
-        from pydp.algorithms.laplacian import Count
-
-        eps = self._consume_budget(epsilon)
-        return Count(eps).quick_result(data.tolist())
-
-    def Max(
-        self,
-        data: np.ndarray,
-        epsilon: float,
-        lower_bound: int | float,
-        upper_bound: int | float,
-    ) -> int | float:
-        """Compute dp max.
-
-        Args:
-            data (np.ndarray): A numpy array of the data to count
-
-        Returns:
-            int | float: DP max
-        """
-        from pydp.algorithms.laplacian import Max
-
-        eps = self._consume_budget(epsilon)
-        return Max(
-            epsilon=eps,
-            lower_bound=lower_bound,
-            upper_bound=upper_bound,
-        ).quick_result(data.tolist())
-
-    def Min(
-        self,
-        data: np.ndarray,
-        epsilon: float,
-        lower_bound: int | float,
-        upper_bound: int | float,
-    ) -> int | float:
-        """Compute dp min.
-
-        Args:
-            data (np.ndarray): A numpy array of the data to count
-
-        Returns:
-            int | float: DP min
-        """
-        from pydp.algorithms.laplacian import Min
-
-        eps = self._consume_budget(epsilon)
-        return Min(
-            epsilon=eps,
-            lower_bound=lower_bound,
-            upper_bound=upper_bound,
-        ).quick_result(data.tolist())
-
-    def Median(
-        self,
-        data: np.ndarray,
-        epsilon: float,
-        lower_bound: int | float,
-        upper_bound: int | float,
-    ) -> int | float:
-        """Compute dp median value.
-
-        Args:
-            data (np.ndarray): A numpy array of the data to count
-
-        Returns:
-            int | float: DP median
-        """
-        from pydp.algorithms.laplacian import Median
-
-        eps = self._consume_budget(epsilon)
-        return Median(
-            epsilon=eps,
-            lower_bound=lower_bound,
-            upper_bound=upper_bound,
-        ).quick_result(data.tolist())
-
-    def BoundedMean(
-        self,
-        data: np.ndarray,
-        epsilon: float,
-        lower_bound: int | float,
-        upper_bound: int | float,
-    ) -> int | float:
-        """Compute dp average of values.
-
-        Args:
-            data (np.ndarray): A numpy array of the data to count
-
-        Returns:
-            int | float: DP mean
-        """
-        from pydp.algorithms.laplacian import BoundedMean
-
-        eps = self._consume_budget(epsilon)
-        return BoundedMean(
-            epsilon=eps,
-            lower_bound=lower_bound,
-            upper_bound=upper_bound,
-        ).quick_result(data.tolist())
-
-    def BoundedSum(
-        self,
-        data: np.ndarray,
-        epsilon: float,
-        lower_bound: int | float,
-        upper_bound: int | float,
-    ) -> int | float:
-        """Compute dp sum.
-
-        Args:
-            data (np.ndarray): A numpy array of the data to count
-
-        Returns:
-            int | float: DP sum
-        """
-        from pydp.algorithms.laplacian import BoundedSum
-
-        eps = self._consume_budget(epsilon)
-        return BoundedSum(
-            epsilon=eps,
-            lower_bound=lower_bound,
-            upper_bound=upper_bound,
-        ).quick_result(data.tolist())
-
-    def BoundedStandardDeviation(
-        self,
-        data: np.ndarray,
-        epsilon: float,
-        lower_bound: int | float,
-        upper_bound: int | float,
-    ) -> int | float:
-        """Compute dp standard deviation of the dataset values.
-
-        Args:
-            data (np.ndarray): A numpy array of the data to count
-
-        Returns:
-            int | float: DP standard deviation
-        """
-        from pydp.algorithms.laplacian import BoundedStandardDeviation
-
-        eps = self._consume_budget(epsilon)
-        return BoundedStandardDeviation(
-            epsilon=eps,
-            lower_bound=lower_bound,
-            upper_bound=upper_bound,
-        ).quick_result(data.tolist())
-
-    def BoundedVariance(
-        self,
-        data: np.ndarray,
-        epsilon: float,
-        lower_bound: int | float,
-        upper_bound: int | float,
-    ) -> int | float:
-        """Compute dp variance of the dataset values.
-
-        Args:
-            data (np.ndarray): A numpy array of the data to count
-
-        Returns:
-            int | float: DP variance
-        """
-        from pydp.algorithms.laplacian import BoundedVariance
-
-        eps = self._consume_budget(epsilon)
-        return BoundedVariance(
-            epsilon=eps,
-            lower_bound=lower_bound,
-            upper_bound=upper_bound,
+        return algo_cls(
+            epsilon=epsilon,
+            lower_bound=self.lower_bound,
+            upper_bound=self.upper_bound,
         ).quick_result(data.tolist())
