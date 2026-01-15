@@ -1,9 +1,0 @@
-basedpyright==1.29.4
-nodejs-wheel-binaries==22.16.0
-numpy==2.2.6
-pandas==2.3.0
-python-dateutil==2.9.0.post0
-pytz==2025.2
-ruff==0.11.13
-six==1.17.0
-tzdata==2025.2

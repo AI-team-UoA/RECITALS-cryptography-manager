@@ -1,0 +1,55 @@
+# Cryptography Manager - Sample Configuration
+# This file demonstrates the configuration options available
+
+# General settings
+general:
+  debug: false
+
+# Differential Privacy settings
+differential_privacy:
+  default_mechanism: laplace
+  default_delta: 1e-5
+
+  # Global privacy budget
+  privacy_budget_limit: 1.0
+
+  # Data source
+  data:
+    database_path: "./examples/database.csv"
+    numerical_column: "ID"
+    lower_bound: 0
+    upper_bound: 999
+
+  # Query plan
+  queries:
+    - name: count
+      type: Count
+      epsilon: 0.05
+
+    - name: max
+      type: Max
+      epsilon: 0.05
+
+    - name: min
+      type: Min
+      epsilon: 0.05
+
+    - name: median
+      type: Median
+      epsilon: 0.10
+
+    - name: mean
+      type: BoundedMean
+      epsilon: 0.10
+
+    - name: sum
+      type: BoundedSum
+      epsilon: 0.15
+
+    - name: stddev
+      type: BoundedStandardDeviation
+      epsilon: 0.20
+
+    - name: variance
+      type: BoundedVariance
+      epsilon: 0.20
