@@ -1,26 +1,39 @@
-# Cryptography Manager - Sample Configuration
-# This file demonstrates the configuration options available
+# Cryptography Manager configuration.
+#
+# This file holds cryptographic parameters: privacy budgets, data bounds and
+# backend defaults. Deployment concerns -- where to forward audit records, how
+# to verify tokens, where to keep state -- come from environment variables
+# instead, so the same file can be mounted into any environment unchanged.
+# See the README for the full list of environment variables.
 
-# General settings
 general:
   debug: false
 
-# Differential Privacy settings
 differential_privacy:
+  # Noise mechanism and privacy leakage probability.
   default_mechanism: laplace
-  default_delta: 1e-5
+  default_delta: 1.0e-5
 
-  # Global privacy budget
+  # Total epsilon granted to each user. When the service runs, this is the
+  # per-user budget the store hands out and decrements; a user whose budget
+  # reaches zero is refused until it is reset.
   privacy_budget_limit: 1.0
 
-  # Data source
+  # Default value bounds, used when a request does not carry its own.
+  # Every query except Count needs bounds: they determine sensitivity, and
+  # letting the backend infer them leaks privacy that was never accounted for.
   data:
     database_path: "./examples/database.csv"
     numerical_column: "ID"
     lower_bound: 0
     upper_bound: 999
 
-  # Query plan
+  # A fixed plan of queries, executed together by the library batch path
+  # (adapter.execute_all). The REST service ignores this list: there, each
+  # request carries its own query type and epsilon cost.
+  #
+  # The epsilon values below must sum to no more than privacy_budget_limit,
+  # which is checked when the adapter is constructed. These total 0.90.
   queries:
     - name: count
       type: Count
