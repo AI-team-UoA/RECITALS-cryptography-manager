@@ -2,3 +2,9 @@
 .ruff_cache/**
 **/__pycache__/**
 *.org
+# Generated example artifacts -- never commit key material or ciphertext
+examples/*.json
+examples/*.enc
+examples/*.dec
+audit/
+*.jsonl
