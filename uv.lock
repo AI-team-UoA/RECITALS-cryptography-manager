@@ -207,7 +207,8 @@ dependencies = [
 
 [package.optional-dependencies]
 dp = [
-    { name = "python-dp" },
+    { name = "python-dp", version = "1.1.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "python-dp", version = "1.1.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
 ]
 examples = [
     { name = "pandas" },
@@ -243,7 +244,8 @@ requires-dist = [
     { name = "pydantic-settings", specifier = ">=2.5.0" },
     { name = "pyfhel", marker = "extra == 'he'", specifier = ">=3.5.0" },
     { name = "pyjwt", extras = ["crypto"], specifier = ">=2.9.0" },
-    { name = "python-dp", marker = "extra == 'dp'", specifier = ">=1.1.4" },
+    { name = "python-dp", marker = "python_full_version >= '3.11' and extra == 'dp'", specifier = ">=1.1.5" },
+    { name = "python-dp", marker = "python_full_version < '3.11' and extra == 'dp'", specifier = ">=1.1.4,<1.1.5" },
     { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "tink", specifier = ">=1.15.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.30.0" },
@@ -855,6 +857,9 @@ wheels = [
 name = "python-dp"
 version = "1.1.4"
 source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version < '3.11'",
+]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b5/22/619c96a7c6c951898064b4acd19db2c82e5c20ef35a933dde1c41fe58144/python_dp-1.1.4-cp310-cp310-macosx_10_14_x86_64.whl", hash = "sha256:778a770d166f29ba8ff9fe028a24af7c04f51299227d0ed6dfe02fca209ed484", size = 4220065, upload-time = "2023-08-15T18:08:14.17Z" },
     { url = "https://files.pythonhosted.org/packages/15/34/824811b0eaad9a6c9001b8c6d427bb5d922b8a570f208aefecedf2308e3d/python_dp-1.1.4-cp310-cp310-manylinux1_x86_64.whl", hash = "sha256:a152c8e7ec0b72f0a6ec4ed6b542ab43899815ea8b2d04f3ed2e0d3678cefa51", size = 3804492, upload-time = "2023-08-15T17:44:57.472Z" },
@@ -862,6 +867,21 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/1d/a4/b72e153d28fc206c5b057c7205508c5f7832a562514a18de453521f4ebf0/python_dp-1.1.4-cp311-cp311-macosx_10_14_x86_64.whl", hash = "sha256:2eba0f70ae8705dc0682e901d4227dc3eaab880f2cd02db6954a394ccdadfedf", size = 4224185, upload-time = "2023-08-15T17:52:36.635Z" },
     { url = "https://files.pythonhosted.org/packages/38/ba/03034770175ef141e1a6f4fca6bd0d89410d0610dfa0ab373009ae4e36f4/python_dp-1.1.4-cp311-cp311-manylinux1_x86_64.whl", hash = "sha256:a9ccf3724cbd74460a3d8baf610d9068a3eb6071eeabfeb69653565b0c2cc9cc", size = 3807478, upload-time = "2023-08-15T17:44:52.192Z" },
     { url = "https://files.pythonhosted.org/packages/1a/8b/7a9feaebbccd590038a5947967ffd1d4b2ad76b2dd2326d13cd37b2c4a83/python_dp-1.1.4-cp311-cp311-win_amd64.whl", hash = "sha256:238abc763ffdc94accd792d53f825b58f4a99bf7153e72f3af2153e9282871d2", size = 2126336, upload-time = "2023-08-15T17:50:29.969Z" },
+]
+
+[[package]]
+name = "python-dp"
+version = "1.1.5"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.12'",
+    "python_full_version == '3.11.*'",
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e0/44/a7f329156f22a3eea41f40887d492bf3dd399bc7bb209d0db1b6cdd704ec/python_dp-1.1.5-cp311-cp311-macosx_15_0_universal2.whl", hash = "sha256:f5566ba4a6529fb1aa2bb0c0c7eb9cb97c6e0f91fcd327ec5a70f18f6b81414a", size = 1169637, upload-time = "2026-05-11T08:44:25.339Z" },
+    { url = "https://files.pythonhosted.org/packages/bc/05/de47590f7cbd8515d5b9a60ffd7c62059040ba23ff1fa5f878c3f887298e/python_dp-1.1.5-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:0400782a833476537e0caed7c9755cae826145410dea6e8676c8a23cb6968500", size = 3158027, upload-time = "2026-05-11T08:34:35.282Z" },
+    { url = "https://files.pythonhosted.org/packages/70/10/a15bfbf2026a7432e53aa15d7d6c19890ada91f5b174abbc5651bfbebdad/python_dp-1.1.5-cp312-cp312-macosx_15_0_universal2.whl", hash = "sha256:cc0fe9e1557eaa761663ccd379818838d88d139983c47ce75ef029ae479d40cb", size = 1170630, upload-time = "2026-05-11T08:38:22.711Z" },
+    { url = "https://files.pythonhosted.org/packages/3d/b0/6032a974a9d293ebbb8565a6947a831484a0e076787a8c9a13e6171361dc/python_dp-1.1.5-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:9dd5c8fbac6398c96a90f0644601bd36ccc7f35dbc4d09376f9f4489e7984621", size = 3158522, upload-time = "2026-05-11T08:34:54.314Z" },
 ]
 
 [[package]]
