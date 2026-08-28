@@ -27,6 +27,31 @@ class CryptographyManagerError(Exception):
         self.error_code = error_code
 
 
+class OperationNotImplementedError(CryptographyManagerError):
+    """Raised for a recognised operation that has no adapter yet.
+
+    Distinct from an unknown operation: the request was well-formed and names
+    something the component intends to support, so the caller should be told
+    "not yet" rather than "no such thing".
+    """
+
+    def __init__(
+        self,
+        message: str,
+        operation: str | None = None,
+        error_code: str | None = None,
+    ) -> None:
+        """Initialize the not-implemented error.
+
+        Args:
+            message: Human-readable error message
+            operation: The operation that is not yet available
+            error_code: Optional error code for programmatic handling
+        """
+        super().__init__(message, error_code)
+        self.operation = operation
+
+
 class ConfigurationError(CryptographyManagerError):
     """Raised when there are configuration-related errors."""
 

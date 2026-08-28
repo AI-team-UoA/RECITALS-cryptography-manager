@@ -83,7 +83,29 @@ class Config:
             raise ConfigError(f"Error loading configuration file: {e}")
 
     def get_submodule_config(self, submodule: str) -> dict[str, Any]:
+        """Return one top-level configuration section.
+
+        Args:
+            submodule: Name of the section, e.g. ``differential_privacy``.
+
+        Returns:
+            The section, or an empty mapping when it is absent. Returning an
+            empty mapping rather than ``None`` keeps every caller's
+            ``section["key"]`` access from failing with an unhelpful
+            ``TypeError`` when configuration is simply missing.
+
+        Raises:
+            ConfigError: If the section cannot be read.
+        """
         try:
-            return self._config.get(submodule)
+            section = self._config.get(submodule)
         except Exception as e:
             raise ConfigError(f"Error loading submodule configuration: {e}")
+        if section is None:
+            return {}
+        if not isinstance(section, dict):
+            raise ConfigError(
+                f"Configuration section '{submodule}' must be a mapping, "
+                f"got {type(section).__name__}"
+            )
+        return section
