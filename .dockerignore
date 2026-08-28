@@ -1,0 +1,20 @@
+# Keep the build context small and, more importantly, keep local state and any
+# key material out of the image.
+.git
+.github
+.venv
+**/__pycache__
+**/*.pyc
+.ruff_cache
+.pytest_cache
+audit/
+*.jsonl
+tests/
+examples/*.enc
+examples/*.dec
+examples/*.json
+.agent-shell
+Dockerfile
+docker-compose.yml
+.dockerignore
+assets/

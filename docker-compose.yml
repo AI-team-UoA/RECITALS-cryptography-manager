@@ -1,0 +1,106 @@
+# Local and integration deployment.
+#
+# Brings the Cryptography Manager up alongside stand-ins for the three
+# downstream services it forwards audit records to, so the forwarding path is
+# genuinely exercised locally instead of merely configured. Watch the records
+# arrive with:
+#
+#     docker compose up --build
+#     docker compose logs -f ledger compliance identity
+#
+# Authentication defaults to development mode, which does not verify tokens.
+# Point CRM_OIDC_ISSUER at a real provider and set CRM_AUTH_MODE=oidc to
+# verify them.
+
+services:
+  crm:
+    build: .
+    image: ghcr.io/ai-team-uoa/recitals-cryptography-manager:latest
+    ports:
+      - "8000:8000"
+    environment:
+      CRM_AUTH_MODE: dev
+      CRM_LOG_LEVEL: INFO
+      CRM_LEDGER_ENDPOINT: http://ledger:9000
+      CRM_CM_ENDPOINT: http://compliance:9000
+      CRM_ILM_ENDPOINT: http://identity:9000
+      CRM_CONFIG_PATH: /app/config.yaml
+      CRM_AUDIT_LOG_PATH: /app/audit/crm-audit.jsonl
+      CRM_BUDGET_STORE_PATH: /app/audit/budgets.json
+    volumes:
+      # Read-only: the service should never rewrite its own configuration.
+      - ./config.yaml:/app/config.yaml:ro
+      # Named volume so privacy budgets survive `docker compose down`. A
+      # budget that resets with the container is not a privacy guarantee.
+      - crm-audit:/app/audit
+    depends_on:
+      ledger:
+        condition: service_healthy
+      compliance:
+        condition: service_healthy
+      identity:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  # Stand-in for the distributed ledger.
+  ledger:
+    image: python:3.10-slim
+    environment:
+      MOCK_SERVICE_NAME: ledger
+      MOCK_PORT: "9000"
+    command: ["python", "/srv/mock_sink.py"]
+    volumes:
+      - ./deploy/mock_sink.py:/srv/mock_sink.py:ro
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request;urllib.request.urlopen('http://localhost:9000/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    ports:
+      - "9101:9000"
+
+  # Stand-in for the compliance manager. Records arrive at /input.
+  compliance:
+    image: python:3.10-slim
+    environment:
+      MOCK_SERVICE_NAME: compliance
+      MOCK_PORT: "9000"
+    command: ["python", "/srv/mock_sink.py"]
+    volumes:
+      - ./deploy/mock_sink.py:/srv/mock_sink.py:ro
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request;urllib.request.urlopen('http://localhost:9000/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    ports:
+      - "9102:9000"
+
+  # Stand-in for the identity lifecycle manager.
+  identity:
+    image: python:3.10-slim
+    environment:
+      MOCK_SERVICE_NAME: identity
+      MOCK_PORT: "9000"
+    command: ["python", "/srv/mock_sink.py"]
+    volumes:
+      - ./deploy/mock_sink.py:/srv/mock_sink.py:ro
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request;urllib.request.urlopen('http://localhost:9000/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    ports:
+      - "9103:9000"
+
+volumes:
+  crm-audit:
