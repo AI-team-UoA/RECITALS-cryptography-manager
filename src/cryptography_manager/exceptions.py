@@ -6,8 +6,13 @@ providing clear error handling and debugging information.
 """
 
 
-class ImportError(Exception):
-    """Base exception for all import errors."""
+class BackendImportError(Exception):
+    """Raised when an optional cryptographic backend cannot be imported.
+
+    Deliberately *not* named ``ImportError``: shadowing the builtin makes
+    ``except ImportError`` inside this package silently stop catching real
+    import failures.
+    """
 
     pass
 
