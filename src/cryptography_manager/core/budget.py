@@ -98,6 +98,10 @@ class PrivacyBudget:
 class BudgetStore(ABC):
     """Per-user privacy budget accounting."""
 
+    total_epsilon: float
+    delta: float | None
+    _lock: threading.Lock
+
     def __init__(self, total_epsilon: float, delta: float | None = None):
         """Initialise the store.
 

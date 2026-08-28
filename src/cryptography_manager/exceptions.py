@@ -20,6 +20,9 @@ class BackendImportError(Exception):
 class CryptographyManagerError(Exception):
     """Base exception for all Cryptography Manager errors."""
 
+    message: str
+    error_code: str | None
+
     def __init__(self, message: str, error_code: str | None = None) -> None:
         """Initialize the base exception.
 
@@ -39,6 +42,8 @@ class OperationNotImplementedError(CryptographyManagerError):
     something the component intends to support, so the caller should be told
     "not yet" rather than "no such thing".
     """
+
+    operation: str | None
 
     def __init__(
         self,
@@ -60,6 +65,8 @@ class OperationNotImplementedError(CryptographyManagerError):
 class ConfigurationError(CryptographyManagerError):
     """Raised when there are configuration-related errors."""
 
+    config_key: str | None
+
     def __init__(
         self,
         message: str,
@@ -79,6 +86,9 @@ class ConfigurationError(CryptographyManagerError):
 
 class AdapterError(CryptographyManagerError):
     """Raised when there are adapter-related errors."""
+
+    adapter_name: str | None
+    operation: str | None
 
     def __init__(
         self,
@@ -103,6 +113,9 @@ class AdapterError(CryptographyManagerError):
 class KeyManagementError(CryptographyManagerError):
     """Raised when there are key management-related errors."""
 
+    key_id: str | None
+    operation: str | None
+
     def __init__(
         self,
         message: str,
@@ -126,6 +139,8 @@ class KeyManagementError(CryptographyManagerError):
 class AuditError(CryptographyManagerError):
     """Raised when there are audit logging-related errors."""
 
+    operation: str | None
+
     def __init__(
         self,
         message: str,
@@ -145,6 +160,8 @@ class AuditError(CryptographyManagerError):
 
 class HomomorphicEncryptionError(AdapterError):
     """Raised when there are homomorphic encryption-related errors."""
+
+    scheme: str | None
 
     def __init__(
         self,
@@ -170,6 +187,8 @@ class HomomorphicEncryptionError(AdapterError):
 class SecureMultiPartyComputationError(AdapterError):
     """Raised when there are secure multi-party computation-related errors."""
 
+    protocol: str | None
+
     def __init__(
         self,
         message: str,
@@ -194,6 +213,8 @@ class SecureMultiPartyComputationError(AdapterError):
 class DifferentialPrivacyError(AdapterError):
     """Raised when there are differential privacy-related errors."""
 
+    mechanism: str | None
+
     def __init__(
         self,
         message: str,
@@ -217,6 +238,8 @@ class DifferentialPrivacyError(AdapterError):
 
 class StandardCryptographyError(AdapterError):
     """Raised when there are standard cryptography-related errors."""
+
+    algorithm: str | None
 
     def __init__(
         self,

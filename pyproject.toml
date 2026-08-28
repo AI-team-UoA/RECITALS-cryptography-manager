@@ -26,8 +26,13 @@ dependencies = [
 cryptography-manager = "cryptography_manager:main"
 
 [project.optional-dependencies]
+# PyDP publishes no single release covering this project's Python range:
+# 1.1.4 ships wheels for 3.8-3.11, and 1.1.5 requires 3.11+ and ships wheels
+# for 3.11-3.14. The markers hand each interpreter a version that actually has
+# a wheel for it, rather than declaring support that fails at install time.
 dp = [
-    "python-dp>=1.1.4",
+    "python-dp>=1.1.4,<1.1.5; python_version < '3.11'",
+    "python-dp>=1.1.5; python_version >= '3.11'",
 ]
 # pandas is used only by the example scripts and the tests, never by the
 # library or the service. Keeping it out of the core dependencies takes ~70MB
@@ -88,9 +93,32 @@ markers = [
 
 [tool.basedpyright]
 reportUnusedCallResult = "none"
-reportAny = "none"
 reportMissingTypeStubs = "none"
-reportUnknownMemberType = "none"
 # Pydantic declares fields on the class body and initialises them through its
 # own metaclass, which the checker reads as uninitialised instance variables.
 reportUninitializedInstanceVariable = "none"
+
+# The request envelope is JSON-shaped by design: `input_data`, `parameters`,
+# `key_config` and `metadata` carry arbitrary caller-supplied structures, and
+# the adapters deliberately speak plain Python types rather than models. `Any`
+# is the honest annotation there, so these rules would flag the design itself.
+reportAny = "none"
+reportExplicitAny = "none"
+reportUnknownVariableType = "none"
+reportUnknownArgumentType = "none"
+reportUnknownMemberType = "none"
+
+# A 79-character line limit makes splitting long messages across adjacent
+# string literals unavoidable.
+reportImplicitStringConcatenation = "none"
+
+# typing.override arrived in 3.12 and this package supports 3.10, so requiring
+# the decorator would mean taking on typing_extensions for a stylistic gain.
+reportImplicitOverride = "none"
+
+# Fires on closures used as callbacks and on the ASGI lifespan handler, all of
+# which are called by the framework rather than by name here.
+reportUnusedFunction = "none"
+
+# pydantic's Field(default_factory=...) is the idiomatic way to express these.
+reportCallInDefaultInitializer = "none"

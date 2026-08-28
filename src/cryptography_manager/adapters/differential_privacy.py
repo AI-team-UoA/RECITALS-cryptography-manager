@@ -23,16 +23,7 @@ import numpy.typing as npt
 
 import numpy as np
 from loguru import logger
-from pydp.algorithms.laplacian import (
-    BoundedMean,
-    BoundedStandardDeviation,
-    BoundedSum,
-    BoundedVariance,
-    Count,
-    Max,
-    Median,
-    Min,
-)
+
 
 from ..config import Config
 from ..core.budget import PrivacyBudget
@@ -44,7 +35,16 @@ from ..exceptions import (
 from .base import AdapterResult, CryptographicAdapter
 
 try:
-    import pydp  # noqa: F401
+    from pydp.algorithms.laplacian import (
+        BoundedMean,
+        BoundedStandardDeviation,
+        BoundedSum,
+        BoundedVariance,
+        Count,
+        Max,
+        Median,
+        Min,
+    )
 except Exception as exc:  # pragma: no cover - environment problem
     raise BackendImportError(f"Failed to initialise PyDP backend: {exc}")
 
