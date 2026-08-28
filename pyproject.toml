@@ -1,6 +1,6 @@
 [project]
 name = "cryptography-manager"
-version = "0.1.0"
+version = "0.2.0"
 description = "Anonymization component for the RECITALS platform"
 readme = "README.md"
 authors = [
@@ -10,11 +10,16 @@ authors = [
 ]
 requires-python = ">=3.10,<3.13"
 dependencies = [
+    "fastapi>=0.115.0",
+    "httpx>=0.27.0",
     "loguru>=0.7.3",
     "numpy>=2.2.6",
-    "pandas>=2.3.3",
+    "pydantic>=2.9.0",
+    "pydantic-settings>=2.5.0",
+    "pyjwt[crypto]>=2.9.0",
     "pyyaml>=6.0.3",
-    "tink>=1.12.0",
+    "tink>=1.15.0",
+    "uvicorn[standard]>=0.30.0",
 ]
 
 [project.scripts]
@@ -24,10 +29,40 @@ cryptography-manager = "cryptography_manager:main"
 dp = [
     "python-dp>=1.1.4",
 ]
+# pandas is used only by the example scripts and the tests, never by the
+# library or the service. Keeping it out of the core dependencies takes ~70MB
+# off the container image.
+examples = [
+    "pandas>=2.3.3",
+]
+# HE and SMPC backends are declared so the container image can bundle them, but
+# no adapter is implemented against them yet -- those operations return HTTP 501.
+#
+# Kept out of the default dependency set on purpose. Pyfhel publishes only an
+# sdist (no wheels), so it compiles Microsoft SEAL from source and needs a C++
+# toolchain plus CMake wherever it is installed.
+he = [
+    "Pyfhel>=3.5.0",
+]
+# PySyft is deliberately absent: syft 0.9.5 pins numpy<=1.24.4 (py<3.12) and
+# pandas==2.2.2, both unsatisfiable against this project's numpy>=2.2.6 /
+# pandas>=2.3.3. Since `uv lock` resolves every extra into one lockfile, adding
+# it breaks `uv sync` for everyone even though the extra is never installed.
+# MPyC has zero dependencies and is conflict-free, so it is the SMPC backend
+# carried here. Revisit PySyft when SMPC is actually implemented.
+smpc = [
+    "mpyc>=0.11",
+]
 
 [dependency-groups]
 dev = [
     "basedpyright>=1.31.4",
+    # Starlette's test client wants httpx2 and warns when it falls back to
+    # httpx. Test-only: the service itself still uses httpx, so this does not
+    # reach the container image.
+    "httpx2>=2.12.0",
+    "pandas>=2.3.3",
+    "pytest>=8.3.0",
     "ruff>=0.13.1",
 ]
 docs = [
@@ -40,11 +75,22 @@ build-backend = "hatchling.build"
 
 [tool.ruff]
 line-length = 79
+
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+markers = [
+    "slow: exercises a real network listener or spawns a server",
+]
 
 [tool.basedpyright]
 reportUnusedCallResult = "none"
 reportAny = "none"
 reportMissingTypeStubs = "none"
 reportUnknownMemberType = "none"
+# Pydantic declares fields on the class body and initialises them through its
+# own metaclass, which the checker reads as uninitialised instance variables.
+reportUninitializedInstanceVariable = "none"
