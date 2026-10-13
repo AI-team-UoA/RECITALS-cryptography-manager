@@ -23,6 +23,7 @@ services:
       CRM_LOG_LEVEL: INFO
       CRM_LEDGER_ENDPOINT: http://ledger:9000
       CRM_CM_ENDPOINT: http://compliance:9000
+      CRM_CM_USE_CASE_ID: UC1
       CRM_ILM_ENDPOINT: http://identity:9000
       CRM_CONFIG_PATH: /app/config.yaml
       CRM_AUDIT_LOG_PATH: /app/audit/crm-audit.jsonl

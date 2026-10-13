@@ -16,8 +16,10 @@ from __future__ import annotations
 import json
 import threading
 from datetime import datetime, timedelta, timezone
+from email import message_from_bytes
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Any, Iterator
+from urllib.parse import parse_qs
 
 import pytest
 from cryptography.hazmat.primitives import serialization
@@ -221,6 +223,7 @@ class _OIDCProvider:
                     body: dict[str, Any] = {
                         "issuer": provider.issuer,
                         "jwks_uri": f"{provider.issuer}/jwks",
+                        "token_endpoint": f"{provider.issuer}/token",
                     }
                 elif self.path.endswith("/jwks"):
                     body = {"keys": [provider.jwk]}
@@ -235,10 +238,35 @@ class _OIDCProvider:
                 self.end_headers()
                 self.wfile.write(payload)
 
+            def do_POST(self) -> None:  # noqa: N802
+                """Serve the client credentials grant."""
+                length = int(self.headers.get("Content-Length", 0))
+                form = parse_qs(self.rfile.read(length).decode())
+                provider.token_requests.append(form)
+                if form.get("client_secret") != ["s3cret"]:
+                    self.send_response(401)
+                    self.end_headers()
+                    return
+                payload = json.dumps(
+                    {
+                        "access_token": provider.mint(
+                            subject="service-account-crm"
+                        ),
+                        "expires_in": 300,
+                        "token_type": "Bearer",
+                    }
+                ).encode()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(payload)))
+                self.end_headers()
+                self.wfile.write(payload)
+
         # Port 0 lets the OS choose, so parallel runs cannot collide.
         self.server = HTTPServer(("127.0.0.1", 0), Handler)
         self.port = self.server.server_address[1]
         self.issuer = f"http://127.0.0.1:{self.port}"
+        self.token_requests: list[dict[str, list[str]]] = []
         self.thread = threading.Thread(
             target=self.server.serve_forever, daemon=True
         )
@@ -296,3 +324,92 @@ def oidc_settings(oidc: _OIDCProvider) -> Settings:
     return Settings(
         auth_mode="oidc", oidc_issuer=oidc.issuer, oidc_client_id="crm"
     )
+
+
+@pytest.fixture
+def oidc_client(tmp_path, oidc: _OIDCProvider) -> Iterator[Any]:
+    """A test client for an application that verifies tokens for real."""
+    from fastapi.testclient import TestClient
+
+    from cryptography_manager.main import create_app
+
+    settings = Settings(
+        auth_mode="oidc",
+        oidc_issuer=oidc.issuer,
+        oidc_client_id="crm",
+        config_path="./config.yaml",
+        audit_log_path=str(tmp_path / "audit.jsonl"),
+        budget_store_path=str(tmp_path / "budgets.json"),
+    )
+    with TestClient(create_app(settings)) as test_client:
+        test_client.audit_file = tmp_path / "audit.jsonl"
+        yield test_client
+
+
+# --------------------------------------------------------------------------
+# A downstream service that records what it is sent
+# --------------------------------------------------------------------------
+
+
+class _Sink:
+    """An HTTP listener that records requests and answers as scripted."""
+
+    def __init__(self) -> None:
+        self.requests: list[dict[str, Any]] = []
+        #: Status codes to answer with, in order; the last one repeats.
+        self.statuses: list[int] = [201]
+        sink = self
+
+        class Handler(BaseHTTPRequestHandler):
+            def log_message(self, *args: Any) -> None:
+                """Stay quiet."""
+
+            def do_POST(self) -> None:  # noqa: N802
+                length = int(self.headers.get("Content-Length", 0))
+                body = self.rfile.read(length)
+                index = min(len(sink.requests), len(sink.statuses) - 1)
+                sink.requests.append(
+                    {
+                        "path": self.path,
+                        "headers": dict(self.headers),
+                        "body": body,
+                    }
+                )
+                self.send_response(sink.statuses[index])
+                self.send_header("Content-Length", "0")
+                self.end_headers()
+
+        self.server = HTTPServer(("127.0.0.1", 0), Handler)
+        self.url = f"http://127.0.0.1:{self.server.server_address[1]}"
+        self.thread = threading.Thread(
+            target=self.server.serve_forever, daemon=True
+        )
+
+    def form(self, index: int = -1) -> dict[str, Any]:
+        """Decode a recorded multipart upload into its named parts."""
+        request = self.requests[index]
+        message = message_from_bytes(
+            b"Content-Type: "
+            + request["headers"]["Content-Type"].encode()
+            + b"\r\n\r\n"
+            + request["body"]
+        )
+        parts: dict[str, Any] = {}
+        for part in message.get_payload():
+            name = part.get_param("name", header="content-disposition")
+            parts[name] = {
+                "filename": part.get_filename(),
+                "content_type": part.get_content_type(),
+                "text": part.get_payload(decode=True).decode("utf-8"),
+            }
+        return parts
+
+
+@pytest.fixture
+def sink() -> Iterator[_Sink]:
+    """A running downstream service that records what reaches it."""
+    recorder = _Sink()
+    recorder.thread.start()
+    yield recorder
+    recorder.server.shutdown()
+    recorder.server.server_close()

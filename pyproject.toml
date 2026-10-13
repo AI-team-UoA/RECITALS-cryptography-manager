@@ -1,6 +1,6 @@
 [project]
 name = "cryptography-manager"
-version = "0.2.0"
+version = "0.3.0"
 description = "Differential privacy, encryption and key management for the RECITALS platform"
 readme = "README.md"
 authors = [
@@ -68,6 +68,9 @@ dev = [
     "httpx2>=2.12.0",
     "pandas>=2.3.3",
     "pytest>=8.3.0",
+    # Parses the RDF sent to the compliance manager the way it will, so the
+    # tests check the document rather than its text. Test-only.
+    "rdflib>=7.0.0",
     "ruff>=0.13.1",
 ]
 # Documentation site. mkdocstrings reads the Google-style docstrings straight

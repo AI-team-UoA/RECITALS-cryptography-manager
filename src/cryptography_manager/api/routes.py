@@ -51,7 +51,8 @@ async def health(request: Request) -> dict[str, Any]:
     responses={
         200: {"description": "Operation completed successfully"},
         400: {"description": "Configuration or parameter validation failed"},
-        403: {"description": "Authorization token missing or invalid"},
+        401: {"description": "Authorization token missing or invalid"},
+        403: {"description": "Token lacks the permission for this action"},
         429: {"description": "Privacy budget exhausted"},
         500: {"description": "Unexpected execution error"},
         413: {"description": "Request body exceeds the configured limit"},
@@ -89,43 +90,50 @@ async def cryptography(
         outcome = workflow.run(None, None, auth.error)
         return _respond(outcome.status, outcome.response)
 
+    def reject(status: WorkflowStatus, error: str) -> JSONResponse:
+        outcome = workflow.reject(
+            status,
+            auth.user_id,
+            error,
+            client_id=auth.client_id,
+            token_issuer=auth.issuer,
+        )
+        return _respond(outcome.status, outcome.response)
+
     limit = state.settings.max_request_bytes
     body, oversized = await _read_capped(request, limit)
     if oversized:
-        outcome = workflow.reject(
+        return reject(
             WorkflowStatus.PAYLOAD_TOO_LARGE,
-            auth.user_id,
             f"Request body exceeds the {limit} byte limit",
         )
-        return _respond(outcome.status, outcome.response)
 
     try:
         payload = json.loads(body) if body.strip() else {}
     except json.JSONDecodeError as exc:
-        outcome = workflow.reject(
+        return reject(
             WorkflowStatus.VALIDATION_ERROR,
-            auth.user_id,
             f"Request body is not valid JSON: {exc}",
         )
-        return _respond(outcome.status, outcome.response)
 
     if not isinstance(payload, dict):
-        outcome = workflow.reject(
+        return reject(
             WorkflowStatus.VALIDATION_ERROR,
-            auth.user_id,
             "Request body must be a JSON object",
         )
-        return _respond(outcome.status, outcome.response)
 
     try:
         parsed = CryptographyRequest.model_validate(payload)
     except ValidationError as exc:
-        outcome = workflow.reject(
-            WorkflowStatus.VALIDATION_ERROR, auth.user_id, _render(exc)
-        )
-        return _respond(outcome.status, outcome.response)
+        return reject(WorkflowStatus.VALIDATION_ERROR, _render(exc))
 
-    outcome = workflow.run(parsed, auth.user_id)
+    outcome = workflow.run(
+        parsed,
+        auth.user_id,
+        permissions=auth.permissions,
+        client_id=auth.client_id,
+        token_issuer=auth.issuer,
+    )
     return _respond(outcome.status, outcome.response)
 
 
@@ -169,9 +177,15 @@ def _respond(
     status: WorkflowStatus, response: CryptographyResponse
 ) -> JSONResponse:
     """Render a workflow outcome as an HTTP response."""
+    headers = (
+        {"WWW-Authenticate": "Bearer"}
+        if status is WorkflowStatus.UNAUTHORIZED
+        else None
+    )
     return JSONResponse(
         status_code=http_status_for(status),
         content=response.model_dump(mode="json"),
+        headers=headers,
     )
 
 

@@ -18,7 +18,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from loguru import logger
 
-from .api.auth import build_verifier
+from .api.auth import build_service_token_provider, build_verifier
 from .api.routes import router
 from .config import Config
 from .config.settings import Settings, get_settings
@@ -28,7 +28,7 @@ from .core.manager import CryptographyManager
 from .core.workflow import CryptographyWorkflow
 
 TITLE = "RECITALS Cryptography Manager"
-VERSION = "0.2.0"
+VERSION = "0.3.0"
 DESCRIPTION = (
     "Unified interface for differential privacy, encryption and key "
     "management. Homomorphic encryption and secure multi-party computation "
@@ -86,10 +86,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         )
 
     manager = CryptographyManager(config=config)
+    service_tokens = build_service_token_provider(settings)
     audit = AuditLogger(
         log_path=settings.audit_log_path,
         targets=settings.audit_targets,
         timeout=settings.forward_timeout_seconds,
+        attempts=settings.forward_attempts,
+        compliance_use_case_id=settings.compliance_use_case_id,
+        token_provider=service_tokens.token if service_tokens else None,
     )
     budget_store = _build_budget_store(settings, config)
 
@@ -112,7 +116,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.audit = audit
     app.state.budget_store = budget_store
     app.state.verifier = build_verifier(settings)
-    app.state.workflow = CryptographyWorkflow(manager, audit, budget_store)
+    app.state.workflow = CryptographyWorkflow(
+        manager,
+        audit,
+        budget_store,
+        permission_prefix=settings.oidc_permission_prefix,
+    )
 
     app.include_router(router)
 

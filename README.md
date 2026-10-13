@@ -292,7 +292,8 @@ and Vault natively, so that is an extension rather than a redesign.
 | 200 | `SUCCESS` | Completed |
 | 400 | `VALIDATION_ERROR` | Parameters or configuration invalid |
 | 400 | `INSUFFICIENT_BUDGET` | Requested cost exceeds remaining budget |
-| 403 | `UNAUTHORIZED` | Token missing or invalid |
+| 401 | `UNAUTHORIZED` | Token missing or invalid |
+| 403 | `FORBIDDEN` | Token valid, but lacks the permission for this action |
 | 413 | `PAYLOAD_TOO_LARGE` | Request body exceeds the configured limit |
 | 429 | `BUDGET_EXHAUSTED` | No privacy budget remains |
 | 500 | `FAILED` | Backend raised during execution |
@@ -315,10 +316,16 @@ so the same file can be mounted anywhere unchanged.
 | `CRM_OIDC_REALM` | – | Realm, if the provider uses one (alias: `KEYCLOAK_REALM`) |
 | `CRM_OIDC_CLIENT_ID` | – | Client ID (alias: `KEYCLOAK_CLIENT_ID`) |
 | `CRM_OIDC_CLIENT_SECRET` | – | Client secret (alias: `KEYCLOAK_CLIENT_SECRET`) |
-| `CRM_OIDC_VERIFY_AUDIENCE` | `false` | Require the audience to match the client ID |
+| `CRM_OIDC_AUDIENCE` | client ID | Audience a token must carry (alias: `EXPECTED_AUDIENCE`) |
+| `CRM_OIDC_JWKS_URI` | discovered | Signing key endpoint, to skip discovery (alias: `JWKS_URI`) |
+| `CRM_OIDC_VERIFY_AUDIENCE` | auto | Verified whenever an audience or client ID is set; `false` disables it |
+| `CRM_OIDC_ENFORCE_PERMISSIONS` | `true` | Require a per-action permission in the token |
+| `CRM_OIDC_PERMISSION_PREFIX` | `crypto` | Namespace of those permissions |
 | `CRM_LEDGER_ENDPOINT` | – | Distributed ledger receiving audit records (alias: `LEDGER_ENDPOINT`) |
-| `CRM_CM_ENDPOINT` | – | Compliance manager; records are posted to `<endpoint>/input` (alias: `CM_ENDPOINT`) |
+| `CRM_CM_ENDPOINT` | – | Compliance manager; records are uploaded to `<endpoint>/input` (alias: `CM_ENDPOINT`) |
+| `CRM_CM_USE_CASE_ID` | – | Use case the compliance manager files records under (alias: `CM_USE_CASE_ID`) |
 | `CRM_ILM_ENDPOINT` | – | Identity manager receiving audit records |
+| `CRM_FORWARD_ATTEMPTS` | `3` | Deliveries tried per audit record and downstream service |
 | `CRM_CONFIG_PATH` | `./config.yaml` | Configuration file to load |
 | `CRM_AUDIT_LOG_PATH` | `./audit/crm-audit.jsonl` | Local audit trail |
 | `CRM_BUDGET_STORE_PATH` | `./audit/budgets.json` | Per-user budget state; unset to keep in memory |
@@ -334,10 +341,38 @@ provider. Only asymmetric signature algorithms are accepted, which closes the
 algorithm-confusion attack where a token is signed with HMAC using the
 provider's public key as the secret.
 
+In `oidc` mode a token must pass four checks: signature, expiry, issuer and
+audience. The audience is this service's client ID unless `CRM_OIDC_AUDIENCE`
+says otherwise, and is what stops a token issued for another platform service
+from being replayed here. With Keycloak, a typical configuration is:
+
+```bash
+CRM_AUTH_MODE=oidc
+KEYCLOAK_URL=https://keycloak.example
+KEYCLOAK_REALM=recitals
+KEYCLOAK_CLIENT_ID=recitals-cryptography-manager
+```
+
+A valid token identifies the caller; it does not by itself allow anything.
+Each action needs its own permission, named `crypto.<action>`:
+
+| Action | Permission |
+| --- | --- |
+| `encrypt`, `decrypt` | `crypto.encrypt`, `crypto.decrypt` |
+| `generate_key`, `rotate_key`, `key_info` | `crypto.generate_key`, `crypto.rotate_key`, `crypto.key_info` |
+| `query` (differential privacy) | `crypto.query` |
+
+A permission is granted by a matching entry in the token's `scope`, by a realm
+role of that name, or by a client role on this service — where the prefix may
+be dropped, so the role `encrypt` under
+`resource_access.<client ID>.roles` grants `crypto.encrypt`. A caller without
+it receives `403` and the name of the permission it lacks.
+
 The default `dev` mode accepts any bearer token **without verifying it** and
 derives a stable per-caller identity from a digest of the token, so budgets
-still separate correctly. It exists so the service is runnable without an
-identity provider. **Never use it in a real deployment.**
+still separate correctly. It enforces no permissions. It exists so the service
+is runnable without an identity provider. **Never use it in a real
+deployment.**
 
 ### Privacy Budgets
 
@@ -357,8 +392,23 @@ Every request produces exactly one audit record — including requests that were
 refused, so a rejection is as traceable as a success. Records are appended as
 JSON lines locally and, when the corresponding endpoints are configured,
 forwarded to the ledger, compliance and identity services. Forwarding is
-best-effort and runs off the request path: an unreachable downstream service is
-logged and never fails the caller's request.
+best-effort and runs off the request path: a delivery is retried a few times,
+and a downstream service that stays unreachable is logged and never fails the
+caller's request. The local file remains the complete record.
+
+Besides the outcome, a record names the caller, the client their token was
+issued to and its issuer, and carries the request's `metadata`, so a caller can
+pass a workflow identifier through for later correlation.
+
+The compliance manager is sent RDF rather than JSON, as its input API requires:
+each record is rendered as a Turtle document using the Data Privacy Vocabulary
+and uploaded to `/input`, with the outcome reduced to `passed` or `failed`. It
+files every submission under a use case, so set `CRM_CM_USE_CASE_ID`, or name
+one per request in `metadata.use_case_id`; a record with neither is not sent.
+The use case must already exist there.
+
+When the service has client credentials of its own (`oidc` mode with a client
+secret), it obtains a service token and presents it on these calls.
 
 Sensitive material never reaches a record. Key material, plaintext, ciphertext,
 tokens, passwords and secret shares are redacted by key name, and bulk data is

@@ -31,7 +31,7 @@ class TestHealth:
 class TestAuthorization:
     def test_a_request_without_a_token_is_refused(self, client, dp_request):
         response = client.post("/cryptography", json=dp_request)
-        assert response.status_code == 403
+        assert response.status_code == 401
         assert response.json()["status"] == "UNAUTHORIZED"
 
     def test_a_non_bearer_scheme_is_refused(self, client, dp_request):
@@ -40,7 +40,7 @@ class TestAuthorization:
             json=dp_request,
             headers={"Authorization": "Basic abc"},
         )
-        assert response.status_code == 403
+        assert response.status_code == 401
 
     def test_a_refusal_still_carries_an_audit_id(self, client, dp_request):
         response = client.post("/cryptography", json=dp_request)
@@ -53,7 +53,7 @@ class TestAuthorization:
         schema, and would report the wrong reason for the rejection.
         """
         response = client.post("/cryptography", json={"garbage": True})
-        assert response.status_code == 403
+        assert response.status_code == 401
 
 
 class TestDifferentialPrivacy:
@@ -380,7 +380,7 @@ class TestOpenAPI:
     def test_all_response_codes_are_documented(self, client):
         spec = client.get("/openapi.json").json()
         responses = spec["paths"]["/cryptography"]["post"]["responses"]
-        assert {"200", "400", "403", "429", "500", "501"} <= set(responses)
+        assert {"200", "400", "401", "403", "429", "500", "501"} <= set(responses)
 
 
 class TestRequestSizeLimit:
@@ -508,7 +508,7 @@ class TestRequestSizeLimit:
         huge = {"operation": "differential_privacy", "backend": "pydp",
                 "input_data": {"data": list(range(3_000_000))}}
         response = client.post("/cryptography", json=huge)
-        assert response.status_code == 403
+        assert response.status_code == 401
 
 
 class TestMalformedBodies:
@@ -575,3 +575,141 @@ class TestKeysetRequired:
             },
         )
         assert "generate_key" in response.json()["errors"]
+
+
+@pytest.mark.slow
+class TestPermissions:
+    """Per-action authorization, against tokens verified for real."""
+
+    @staticmethod
+    def bearer(oidc, **claims) -> dict[str, str]:
+        return {"Authorization": f"Bearer {oidc.mint(**claims)}"}
+
+    @staticmethod
+    def keygen() -> dict:
+        return {
+            "operation": "key_management",
+            "backend": "tink",
+            "input_data": {},
+            "parameters": {"action": "generate_key"},
+        }
+
+    def encrypt(self, client, oidc, headers) -> object:
+        keyset = client.post(
+            "/cryptography",
+            json=self.keygen(),
+            headers=self.bearer(oidc, scope="crypto.generate_key"),
+        ).json()["result"]["keyset"]
+        return client.post(
+            "/cryptography",
+            json={
+                "operation": "encryption",
+                "backend": "tink",
+                "input_data": {"plaintext": "hello"},
+                "parameters": {"action": "encrypt"},
+                "key_config": {"keyset": keyset},
+                "metadata": {"workflow_id": "wf-7"},
+            },
+            headers=headers,
+        )
+
+    def test_a_valid_token_without_the_permission_is_forbidden(
+        self, oidc_client, oidc
+    ):
+        response = self.encrypt(oidc_client, oidc, self.bearer(oidc))
+        assert response.status_code == 403
+        body = response.json()
+        assert body["status"] == "FORBIDDEN"
+        assert body["metadata"] == {"required_permission": "crypto.encrypt"}
+        assert body["result"] is None
+
+    def test_a_scope_grants_the_action(self, oidc_client, oidc):
+        headers = self.bearer(oidc, scope="openid crypto.encrypt")
+        assert self.encrypt(oidc_client, oidc, headers).status_code == 200
+
+    def test_a_role_on_this_service_grants_the_action(
+        self, oidc_client, oidc
+    ):
+        headers = self.bearer(
+            oidc, resource_access={"crm": {"roles": ["encrypt"]}}
+        )
+        assert self.encrypt(oidc_client, oidc, headers).status_code == 200
+
+    def test_one_permission_does_not_grant_another(self, oidc_client, oidc):
+        headers = self.bearer(oidc, scope="crypto.decrypt")
+        assert self.encrypt(oidc_client, oidc, headers).status_code == 403
+
+    def test_a_differential_privacy_query_needs_its_own_permission(
+        self, oidc_client, oidc, dp_request
+    ):
+        refused = oidc_client.post(
+            "/cryptography", json=dp_request, headers=self.bearer(oidc)
+        )
+        allowed = oidc_client.post(
+            "/cryptography",
+            json=dp_request,
+            headers=self.bearer(oidc, scope="crypto.query"),
+        )
+        assert refused.status_code == 403
+        assert allowed.status_code == 200
+
+    def test_a_refused_query_costs_no_budget(
+        self, oidc_client, oidc, dp_request
+    ):
+        oidc_client.post(
+            "/cryptography", json=dp_request, headers=self.bearer(oidc)
+        )
+        allowed = oidc_client.post(
+            "/cryptography",
+            json=dp_request,
+            headers=self.bearer(oidc, scope="crypto.query"),
+        )
+        assert allowed.json()["metadata"]["spent_epsilon"] == pytest.approx(
+            dp_request["parameters"]["epsilon_cost"]
+        )
+
+    def test_the_audit_record_says_who_called_and_through_what(
+        self, oidc_client, oidc
+    ):
+        headers = self.bearer(
+            oidc, scope="crypto.encrypt", azp="recitals-anonymization-manager"
+        )
+        self.encrypt(oidc_client, oidc, headers)
+        record = read_audit(oidc_client)[-1]
+        assert record["client_id"] == "recitals-anonymization-manager"
+        assert record["token_issuer"] == oidc.issuer
+        assert record["action"] == "encrypt"
+        assert record["metadata"] == {"workflow_id": "wf-7"}
+
+    def test_a_forbidden_request_is_audited(self, oidc_client, oidc):
+        self.encrypt(oidc_client, oidc, self.bearer(oidc))
+        assert read_audit(oidc_client)[-1]["status"] == "FORBIDDEN"
+
+
+class TestUnauthenticatedResponse:
+    def test_it_tells_the_client_how_to_authenticate(self, client, dp_request):
+        response = client.post("/cryptography", json=dp_request)
+        assert response.headers["WWW-Authenticate"] == "Bearer"
+
+
+class TestUnknownParameters:
+    def test_an_ignored_encryption_parameter_is_refused(
+        self, client, auth_header
+    ):
+        """Asking for an algorithm in a field nothing reads must not pass.
+
+        The caller would otherwise receive ciphertext under a different
+        algorithm than the one they named, with nothing to tell them so.
+        """
+        response = client.post(
+            "/cryptography",
+            json={
+                "operation": "encryption",
+                "backend": "tink",
+                "input_data": {"plaintext": "hello"},
+                "parameters": {"action": "encrypt", "algorithm": "AES256_GCM"},
+            },
+            headers=auth_header,
+        )
+        assert response.status_code == 400
+        assert "algorithm" in response.json()["errors"]

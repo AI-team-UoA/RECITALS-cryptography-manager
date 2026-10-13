@@ -45,6 +45,14 @@ VALID_ACTIONS: dict[Operation, frozenset[str]] = {
     ),
 }
 
+#: Parameters each Tink-backed operation actually reads. Anything else is
+#: refused: a caller who asks for a particular algorithm in a field nothing
+#: looks at would otherwise get a different one and never be told.
+KNOWN_PARAMETERS: dict[Operation, frozenset[str]] = {
+    Operation.ENCRYPTION: frozenset({"action", "associated_data"}),
+    Operation.KEY_MANAGEMENT: frozenset({"action"}),
+}
+
 
 @final
 class WorkflowOutcome:
@@ -68,6 +76,7 @@ class CryptographyWorkflow:
         manager: CryptographyManager,
         audit: AuditLogger,
         budget_store: BudgetStore,
+        permission_prefix: str = "crypto",
     ) -> None:
         """Initialise the workflow.
 
@@ -75,10 +84,24 @@ class CryptographyWorkflow:
             manager: Dispatches requests to backend adapters.
             audit: Records every outcome.
             budget_store: Per-user privacy budget accounting.
+            permission_prefix: Namespace of the per-action permissions.
         """
         self.manager = manager
         self.audit = audit
         self.budget_store = budget_store
+        self.permission_prefix = permission_prefix
+
+    def required_permission(self, operation: Operation, action: str) -> str:
+        """Name the permission an action requires.
+
+        Args:
+            operation: The requested operation.
+            action: Its sub-operation, if it has one.
+
+        Returns:
+            The permission, such as ``crypto.encrypt``.
+        """
+        return f"{self.permission_prefix}.{action or operation.value}"
 
     def reject(
         self,
@@ -87,6 +110,8 @@ class CryptographyWorkflow:
         error: str | None = None,
         operation: str | None = None,
         backend: str | None = None,
+        client_id: str | None = None,
+        token_issuer: str | None = None,
     ) -> WorkflowOutcome:
         """Record a rejection that happened before execution could start.
 
@@ -101,6 +126,8 @@ class CryptographyWorkflow:
             error: Human-readable reason for the rejection.
             operation: Requested operation, if it could be determined.
             backend: Requested backend, if it could be determined.
+            client_id: Client the caller's token was issued to.
+            token_issuer: Issuer of the caller's token.
 
         Returns:
             The outcome, carrying both status and response body.
@@ -108,6 +135,8 @@ class CryptographyWorkflow:
         record = self.audit.record(
             status=status.value,
             user_id=user_id,
+            client_id=client_id,
+            token_issuer=token_issuer,
             operation=operation,
             backend=backend,
             execution_time=0.0,
@@ -129,6 +158,9 @@ class CryptographyWorkflow:
         request: CryptographyRequest | None,
         user_id: str | None,
         auth_error: str | None = None,
+        permissions: frozenset[str] | None = None,
+        client_id: str | None = None,
+        token_issuer: str | None = None,
     ) -> WorkflowOutcome:
         """Execute one request and produce its response.
 
@@ -137,6 +169,10 @@ class CryptographyWorkflow:
                 before the body was considered.
             user_id: Authenticated user, or ``None`` if unauthenticated.
             auth_error: Why authorization failed, if it did.
+            permissions: Permissions the caller's token grants, or ``None``
+                when they are not enforced.
+            client_id: Client the caller's token was issued to.
+            token_issuer: Issuer of the caller's token.
 
         Returns:
             The workflow outcome, carrying both status and response body.
@@ -145,6 +181,8 @@ class CryptographyWorkflow:
         operation = request.operation.value if request else None
         backend = request.backend.value if request else None
         parameters = dict(request.parameters) if request else {}
+        caller_metadata = dict(request.metadata) if request else {}
+        action = ""
 
         def finish(
             status: WorkflowStatus,
@@ -156,10 +194,14 @@ class CryptographyWorkflow:
             record = self.audit.record(
                 status=status.value,
                 user_id=user_id,
+                client_id=client_id,
+                token_issuer=token_issuer,
                 operation=operation,
+                action=action,
                 backend=backend,
                 execution_time=elapsed,
                 parameters=parameters,
+                metadata=caller_metadata,
                 error_message=error,
             )
             return WorkflowOutcome(
@@ -199,6 +241,31 @@ class CryptographyWorkflow:
                     f"{', '.join(sorted(allowed))}"
                 ),
             )
+
+        known = KNOWN_PARAMETERS.get(request.operation)
+        if known is not None:
+            unknown = sorted(set(request.parameters) - known)
+            if unknown:
+                return finish(
+                    WorkflowStatus.VALIDATION_ERROR,
+                    error=(
+                        f"Unknown parameter(s) for operation "
+                        f"'{request.operation.value}': {', '.join(unknown)}; "
+                        f"supported: {', '.join(sorted(known))}"
+                    ),
+                )
+
+        # Authorization proper: a valid token says who is calling, not that
+        # they may do this. Checked here rather than with authentication
+        # because the permission depends on the action being requested.
+        if permissions is not None:
+            needed = self.required_permission(request.operation, action)
+            if needed not in permissions:
+                return finish(
+                    WorkflowStatus.FORBIDDEN,
+                    metadata={"required_permission": needed},
+                    error=f"Caller lacks the required permission '{needed}'",
+                )
 
         # 3. Operation-specific validation and pre-checks.
         epsilon_cost: float | None = None

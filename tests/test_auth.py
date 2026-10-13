@@ -15,8 +15,11 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography_manager.api.auth import (
     DevTokenVerifier,
     OIDCTokenVerifier,
+    ServiceTokenProvider,
+    build_service_token_provider,
     build_verifier,
     extract_bearer,
+    extract_permissions,
 )
 from cryptography_manager.config.settings import Settings
 
@@ -205,7 +208,151 @@ class TestSettingsAliases:
         )
         assert settings.audit_targets == {"ledger": "https://ledger.example"}
 
+    def test_aliased_fields_are_settable_by_name_and_by_alias(
+        self, monkeypatch
+    ):
+        assert Settings(compliance_use_case_id="UC1").compliance_use_case_id == "UC1"
+        monkeypatch.setenv("CRM_CM_USE_CASE_ID", "UC2")
+        assert Settings().compliance_use_case_id == "UC2"
+
     def test_issuer_without_a_realm(self, monkeypatch):
         monkeypatch.setenv("CRM_OIDC_ISSUER", "https://idp.example/")
         monkeypatch.delenv("KEYCLOAK_REALM", raising=False)
         assert Settings(auth_mode="oidc").issuer_url == "https://idp.example"
+
+
+class TestAudience:
+    def test_audience_is_verified_once_one_is_known(self, oidc):
+        """Knowing its own client ID is enough to switch the check on."""
+        verifier = OIDCTokenVerifier(
+            Settings(
+                auth_mode="oidc", oidc_issuer=oidc.issuer, oidc_client_id="crm"
+            )
+        )
+        assert verifier.verify(oidc.mint(audience="crm")).ok
+        assert not verifier.verify(oidc.mint(audience="another-service")).ok
+        assert not verifier.verify(oidc.mint(audience=None)).ok
+
+    def test_an_explicit_audience_overrides_the_client_id(
+        self, oidc, monkeypatch
+    ):
+        monkeypatch.setenv("EXPECTED_AUDIENCE", "recitals-cryptography-manager")
+        settings = Settings(
+            auth_mode="oidc", oidc_issuer=oidc.issuer, oidc_client_id="crm"
+        )
+        verifier = OIDCTokenVerifier(settings)
+        assert settings.audience_to_verify == "recitals-cryptography-manager"
+        assert verifier.verify(
+            oidc.mint(audience="recitals-cryptography-manager")
+        ).ok
+        assert not verifier.verify(oidc.mint(audience="crm")).ok
+
+    def test_it_can_be_switched_off(self, oidc):
+        verifier = OIDCTokenVerifier(
+            Settings(
+                auth_mode="oidc",
+                oidc_issuer=oidc.issuer,
+                oidc_client_id="crm",
+                oidc_verify_audience=False,
+            )
+        )
+        assert verifier.verify(oidc.mint(audience="another-service")).ok
+
+    def test_demanding_it_without_an_audience_fails_at_startup(self):
+        with pytest.raises(ValueError, match="CRM_OIDC_AUDIENCE"):
+            Settings(
+                auth_mode="oidc",
+                oidc_issuer="https://idp.example",
+                oidc_verify_audience=True,
+            )
+
+    def test_a_configured_key_endpoint_needs_no_discovery(self, oidc):
+        """The issuer here serves no discovery document at this path."""
+        verifier = OIDCTokenVerifier(
+            Settings(
+                auth_mode="oidc",
+                oidc_issuer=f"{oidc.issuer}/realms/none",
+                oidc_jwks_uri=f"{oidc.issuer}/jwks",
+            )
+        )
+        token = oidc.mint(issuer=f"{oidc.issuer}/realms/none")
+        assert verifier.verify(token).ok
+
+
+class TestPermissions:
+    #: The shape of service token the identity provider issues.
+    CLAIMS = {
+        "sub": "service-account-recitals-anonymization-manager",
+        "azp": "recitals-anonymization-manager",
+        "scope": "crypto.encrypt profile",
+        "realm_access": {"roles": ["recitals-service"]},
+        "resource_access": {
+            "recitals-cryptography-manager": {"roles": ["decrypt"]},
+            "another-service": {"roles": ["generate_key"]},
+        },
+    }
+
+    def granted(self) -> frozenset[str]:
+        return extract_permissions(
+            self.CLAIMS, "recitals-cryptography-manager", "crypto"
+        )
+
+    def test_scopes_are_read(self):
+        assert "crypto.encrypt" in self.granted()
+
+    def test_roles_on_this_service_gain_the_prefix(self):
+        assert "crypto.decrypt" in self.granted()
+
+    def test_roles_on_another_service_grant_nothing_here(self):
+        assert "crypto.generate_key" not in self.granted()
+
+    def test_malformed_claims_grant_nothing(self):
+        claims = {"scope": 7, "realm_access": [], "resource_access": "x"}
+        assert extract_permissions(claims, "crm", "crypto") == frozenset()
+
+    def test_verified_tokens_carry_their_permissions(
+        self, oidc_settings, oidc
+    ):
+        verifier = OIDCTokenVerifier(oidc_settings)
+        result = verifier.verify(oidc.mint(scope="crypto.encrypt"))
+        assert result.permissions == frozenset({"crypto.encrypt"})
+
+    def test_enforcement_can_be_switched_off(self, oidc):
+        verifier = OIDCTokenVerifier(
+            Settings(
+                auth_mode="oidc",
+                oidc_issuer=oidc.issuer,
+                oidc_client_id="crm",
+                oidc_enforce_permissions=False,
+            )
+        )
+        assert verifier.verify(oidc.mint()).permissions is None
+
+    def test_development_tokens_are_not_restricted(self):
+        assert DevTokenVerifier().verify("anything").permissions is None
+
+
+class TestServiceToken:
+    def settings(self, oidc, secret: str = "s3cret") -> Settings:
+        return Settings(
+            auth_mode="oidc",
+            oidc_issuer=oidc.issuer,
+            oidc_client_id="crm",
+            oidc_client_secret=secret,
+        )
+
+    def test_a_token_is_obtained_and_reused(self, oidc):
+        oidc.token_requests.clear()
+        provider = ServiceTokenProvider(self.settings(oidc))
+        first = provider.token()
+        assert first and provider.token() == first
+        assert len(oidc.token_requests) == 1
+        assert oidc.token_requests[0]["grant_type"] == ["client_credentials"]
+
+    def test_a_refusal_yields_no_token_rather_than_an_error(self, oidc):
+        provider = ServiceTokenProvider(self.settings(oidc, secret="wrong"))
+        assert provider.token() is None
+
+    def test_no_provider_without_credentials(self, oidc_settings):
+        assert build_service_token_provider(oidc_settings) is None
+        assert build_service_token_provider(Settings()) is None

@@ -122,7 +122,7 @@ jobs:
             http://127.0.0.1:8000/cryptography \
             -H 'Content-Type: application/json' \
             -d '{"operation":"differential_privacy","backend":"pydp","input_data":{"data":[1]}}')
-          [ "$code" = "403" ] || { echo "expected 403, got $code"; exit 1; }
+          [ "$code" = "401" ] || { echo "expected 401, got $code"; exit 1; }
 
           echo "--- a differential privacy query must succeed ---"
           code=$(curl -s -o /dev/null -w '%{http_code}' -X POST \

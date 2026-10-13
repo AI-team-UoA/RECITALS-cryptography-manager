@@ -51,8 +51,20 @@ class Handler(BaseHTTPRequestHandler):
         raw = self.rfile.read(length) if length else b"{}"
         try:
             record = json.loads(raw)
-        except json.JSONDecodeError:
-            self._respond(400, {"error": "invalid JSON"})
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            # The compliance manager is sent an RDF file upload rather than
+            # JSON, so anything that is not JSON is kept and shown as text.
+            record = {
+                "content_type": self.headers.get("Content-Type"),
+                "body": raw.decode("utf-8", errors="replace"),
+            }
+            Handler.received.append(record)
+            print(
+                f"[{SERVICE}] {self.path} <- {record['content_type']}\n"
+                f"{record['body']}",
+                flush=True,
+            )
+            self._respond(201, {"accepted": True, "service": SERVICE})
             return
 
         Handler.received.append(record)

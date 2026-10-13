@@ -230,9 +230,19 @@ class AuditRecord(BaseModel):
         default_factory=lambda: datetime.now(timezone.utc),
     )
     user_id: str | None = None
+    client_id: str | None = Field(
+        default=None,
+        description="Client the caller's token was issued to.",
+    )
+    token_issuer: str | None = None
     operation: str | None = None
+    action: str | None = None
     backend: str | None = None
     status: str = ""
     execution_time: float = 0.0
     parameters: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Caller-supplied context, such as a workflow identifier.",
+    )
     error_message: str | None = None

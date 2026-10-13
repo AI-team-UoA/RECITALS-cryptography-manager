@@ -16,6 +16,8 @@ from __future__ import annotations
 
 import json
 import threading
+import time
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any, final
@@ -24,6 +26,12 @@ import httpx
 from loguru import logger
 
 from ..api.models import AuditRecord
+from .compliance import (
+    COMPONENT,
+    component_status,
+    to_turtle,
+    use_case_for,
+)
 
 #: Keys whose values are redacted outright. Matching is case-insensitive and
 #: substring-based, so 'secret_key' and 'privateKey' are both caught.
@@ -119,6 +127,10 @@ class AuditLogger:
         log_path: str | Path = "./audit/crm-audit.jsonl",
         targets: dict[str, str] | None = None,
         timeout: float = 5.0,
+        attempts: int = 3,
+        retry_backoff: float = 0.5,
+        compliance_use_case_id: str | None = None,
+        token_provider: Callable[[], str | None] | None = None,
     ):
         """Initialise the logger.
 
@@ -126,11 +138,27 @@ class AuditLogger:
             log_path: JSON-lines file receiving every record.
             targets: Downstream services to forward to, keyed by name.
             timeout: Per-request timeout when forwarding.
+            attempts: Deliveries tried per record and downstream service.
+            retry_backoff: Seconds before the first retry; doubles each time.
+            compliance_use_case_id: Use case the compliance manager files
+                records under when a request names none.
+            token_provider: Supplies this service's own access token for
+                downstream calls, when it has one.
         """
         self.log_path = Path(log_path)
         self.log_path.parent.mkdir(parents=True, exist_ok=True)
         self.targets = targets or {}
         self.timeout = timeout
+        self.attempts = max(attempts, 1)
+        self.retry_backoff = retry_backoff
+        self.compliance_use_case_id = compliance_use_case_id
+        self.token_provider = token_provider
+        if "compliance" in self.targets and not compliance_use_case_id:
+            logger.warning(
+                "No compliance use case configured (CRM_CM_USE_CASE_ID): "
+                "only requests naming one in metadata.use_case_id will "
+                "reach the compliance manager."
+            )
         self._write_lock = threading.Lock()
         # Forwarding runs off the request path so a slow downstream service
         # cannot add its latency to every caller's response.
@@ -143,10 +171,14 @@ class AuditLogger:
         *,
         status: str,
         user_id: str | None = None,
+        client_id: str | None = None,
+        token_issuer: str | None = None,
         operation: str | None = None,
+        action: str | None = None,
         backend: str | None = None,
         execution_time: float = 0.0,
         parameters: dict[str, Any] | None = None,
+        metadata: dict[str, Any] | None = None,
         error_message: str | None = None,
     ) -> AuditRecord:
         """Construct a sanitised audit record.
@@ -154,10 +186,14 @@ class AuditLogger:
         Args:
             status: Workflow outcome.
             user_id: Identifier of the requesting user, if known.
+            client_id: Client the caller's token was issued to.
+            token_issuer: Issuer of the caller's token.
             operation: Requested cryptographic operation.
+            action: Sub-operation that was requested.
             backend: Library used.
             execution_time: Duration of execution, in seconds.
             parameters: Raw parameters; sanitised before being stored.
+            metadata: Caller-supplied context; sanitised the same way.
             error_message: Failure detail, if any.
 
         Returns:
@@ -165,11 +201,15 @@ class AuditLogger:
         """
         return AuditRecord(
             user_id=user_id,
+            client_id=client_id,
+            token_issuer=token_issuer,
             operation=operation,
+            action=action or None,
             backend=backend,
             status=status,
             execution_time=round(execution_time, 6),
             parameters=sanitize(parameters or {}),
+            metadata=sanitize(metadata or {}),
             error_message=error_message,
         )
 
@@ -205,26 +245,99 @@ class AuditLogger:
 
     def _forward(self, record: AuditRecord) -> None:
         """Send a record to every configured downstream service."""
-        payload = json.loads(record.model_dump_json())
+        headers: dict[str, str] = {}
+        token = self.token_provider() if self.token_provider else None
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+
         for name, endpoint in self.targets.items():
-            url = (
-                f"{endpoint.rstrip('/')}/input"
-                if name == "compliance"
-                else endpoint
-            )
+            if name == "compliance":
+                request = self._compliance_request(record, endpoint)
+                if request is None:
+                    logger.debug(
+                        f"Audit record {record.audit_id} names no use case; "
+                        "not sent to compliance"
+                    )
+                    continue
+            else:
+                request = {
+                    "url": endpoint,
+                    "json": json.loads(record.model_dump_json()),
+                }
+            self._deliver(name, record.audit_id, headers, request)
+
+    def _compliance_request(
+        self, record: AuditRecord, endpoint: str
+    ) -> dict[str, Any] | None:
+        """Build the upload the compliance manager's input API expects.
+
+        Returns:
+            Keyword arguments for the POST, or ``None`` when the record
+            belongs to no use case and so cannot be filed.
+        """
+        use_case = use_case_for(
+            record, self.compliance_use_case_id
+        )
+        if use_case is None:
+            return None
+        document = to_turtle(record).encode("utf-8")
+        return {
+            "url": f"{endpoint.rstrip('/')}/input",
+            "files": {
+                "file": (
+                    f"crm-{record.audit_id}.ttl",
+                    document,
+                    "text/turtle",
+                )
+            },
+            "data": {
+                "use_case_id": use_case,
+                "service": record.client_id or COMPONENT,
+                "component": COMPONENT,
+                "component_status": component_status(record),
+            },
+        }
+
+    def _deliver(
+        self,
+        name: str,
+        audit_id: str,
+        headers: dict[str, str],
+        request: dict[str, Any],
+    ) -> None:
+        """POST one record to one service, retrying transient failures.
+
+        A refusal (4xx) is final: sending the same record again cannot
+        succeed. Anything else is retried with a doubling pause, after which
+        the record survives only in the local file.
+        """
+        url = request["url"]
+        problem = "no attempt made"
+        for attempt in range(1, self.attempts + 1):
             try:
                 response = httpx.post(
-                    url, json=payload, timeout=self.timeout
+                    headers=headers, timeout=self.timeout, **request
                 )
-                response.raise_for_status()
-                logger.debug(
-                    f"Audit record {record.audit_id} forwarded to {name}"
-                )
+                if response.status_code < 400:
+                    logger.debug(
+                        f"Audit record {audit_id} forwarded to {name}"
+                    )
+                    return
+                problem = f"HTTP {response.status_code}"
+                if response.status_code < 500:
+                    logger.warning(
+                        f"{name} refused audit record {audit_id} "
+                        f"({url}): {problem} {response.text[:200]}"
+                    )
+                    return
             except Exception as exc:
-                logger.warning(
-                    f"Failed to forward audit record {record.audit_id} "
-                    f"to {name} ({url}): {exc}"
-                )
+                problem = str(exc)
+            if attempt < self.attempts:
+                time.sleep(self.retry_backoff * 2 ** (attempt - 1))
+        logger.warning(
+            f"Failed to forward audit record {audit_id} to {name} "
+            f"({url}) after {self.attempts} attempts: {problem}"
+        )
 
     def shutdown(self) -> None:
         """Wait for in-flight forwards to finish."""

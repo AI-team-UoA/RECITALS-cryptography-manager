@@ -29,6 +29,9 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
         case_sensitive=False,
+        # Fields with environment aliases stay settable by their own name
+        # when settings are constructed in code.
+        populate_by_name=True,
     )
 
     # ---- authentication ----
@@ -70,11 +73,46 @@ class Settings(BaseSettings):
         ),
         description="Client secret. Injected at runtime, never baked in.",
     )
-    oidc_verify_audience: bool = Field(
-        default=False,
+    oidc_audience: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "CRM_OIDC_AUDIENCE", "OIDC_AUDIENCE", "EXPECTED_AUDIENCE"
+        ),
         description=(
-            "Whether to require the token audience to match the client ID. "
-            "Off by default because providers differ in how they populate it."
+            "Audience a token must carry. Defaults to the client ID, which "
+            "is also where client-level roles are looked up."
+        ),
+    )
+    oidc_jwks_uri: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "CRM_OIDC_JWKS_URI", "OIDC_JWKS_URI", "JWKS_URI"
+        ),
+        description=(
+            "Signing key endpoint. Discovered from the issuer when unset."
+        ),
+    )
+    oidc_verify_audience: bool | None = Field(
+        default=None,
+        description=(
+            "Whether a token must name this service as its audience. Unset, "
+            "it is verified whenever an audience or client ID is configured. "
+            "Without it, a token minted for any other service of the same "
+            "issuer is accepted here too."
+        ),
+    )
+    oidc_enforce_permissions: bool = Field(
+        default=True,
+        description=(
+            "Whether each action requires its own permission in the token, "
+            "as a scope or a client role. Off, any valid token may do "
+            "anything."
+        ),
+    )
+    oidc_permission_prefix: str = Field(
+        default="crypto",
+        description=(
+            "Namespace of the permissions, as in 'crypto.encrypt'."
         ),
     )
 
@@ -100,10 +138,25 @@ class Settings(BaseSettings):
         ),
         description="Identity manager receiving audit records.",
     )
+    compliance_use_case_id: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "CRM_CM_USE_CASE_ID", "CM_USE_CASE_ID"
+        ),
+        description=(
+            "Use case the compliance manager files records under. A request "
+            "can name its own in metadata.use_case_id."
+        ),
+    )
     forward_timeout_seconds: float = Field(
         default=5.0,
         gt=0,
         description="Per-request timeout when forwarding audit records.",
+    )
+    forward_attempts: int = Field(
+        default=3,
+        ge=1,
+        description="Deliveries tried per audit record and downstream.",
     )
 
     # ---- local state ----
@@ -145,7 +198,29 @@ class Settings(BaseSettings):
                 "auth_mode='oidc' requires an issuer; set CRM_OIDC_ISSUER "
                 "(or KEYCLOAK_URL)"
             )
+        if (
+            self.auth_mode == "oidc"
+            and self.oidc_verify_audience is True
+            and not self.expected_audience
+        ):
+            raise ValueError(
+                "Audience verification needs to know this service's "
+                "audience; set CRM_OIDC_AUDIENCE or CRM_OIDC_CLIENT_ID, or "
+                "disable it with CRM_OIDC_VERIFY_AUDIENCE=false"
+            )
         return self
+
+    @property
+    def expected_audience(self) -> str | None:
+        """Audience this service answers to, falling back to its client ID."""
+        return self.oidc_audience or self.oidc_client_id
+
+    @property
+    def audience_to_verify(self) -> str | None:
+        """Audience tokens are checked against, or ``None`` for no check."""
+        if self.oidc_verify_audience is False:
+            return None
+        return self.expected_audience
 
     @property
     def issuer_url(self) -> str | None:

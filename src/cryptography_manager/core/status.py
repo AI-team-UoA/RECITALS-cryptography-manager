@@ -23,6 +23,7 @@ class WorkflowStatus(str, Enum):
 
     SUCCESS = "SUCCESS"
     UNAUTHORIZED = "UNAUTHORIZED"
+    FORBIDDEN = "FORBIDDEN"
     BUDGET_EXHAUSTED = "BUDGET_EXHAUSTED"
     INSUFFICIENT_BUDGET = "INSUFFICIENT_BUDGET"
     VALIDATION_ERROR = "VALIDATION_ERROR"
@@ -46,7 +47,11 @@ _HTTP_STATUS: dict[WorkflowStatus, int] = {
     WorkflowStatus.SUCCESS: 200,
     WorkflowStatus.VALIDATION_ERROR: 400,
     WorkflowStatus.INSUFFICIENT_BUDGET: 400,
-    WorkflowStatus.UNAUTHORIZED: 403,
+    # 401 for a caller who has not proven who they are, 403 for one who has
+    # but lacks the permission: a client can only react correctly -- fetch a
+    # new token versus stop retrying -- if the two are told apart.
+    WorkflowStatus.UNAUTHORIZED: 401,
+    WorkflowStatus.FORBIDDEN: 403,
     WorkflowStatus.BUDGET_EXHAUSTED: 429,
     WorkflowStatus.NOT_IMPLEMENTED: 501,
     WorkflowStatus.PAYLOAD_TOO_LARGE: 413,
