@@ -7,7 +7,7 @@ and shows what a not-yet-implemented operation returns.
 
 Start the service first, in another terminal:
 
-    uv run uvicorn cryptography_manager.main:app --reload
+    uv run uvicorn cryptography_manager.main:app --reload --port 6001
 
 then run:
 
@@ -44,7 +44,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--url",
-        default="http://127.0.0.1:8000",
+        default="http://127.0.0.1:6001",
         help="Base URL of a running Cryptography Manager",
     )
     args = parser.parse_args()
@@ -55,7 +55,7 @@ def main() -> None:
         except httpx.ConnectError:
             raise SystemExit(
                 f"Could not reach {args.url}. Start the service with:\n"
-                f"  uv run uvicorn cryptography_manager.main:app --reload"
+                f"  uv run uvicorn cryptography_manager.main:app --reload --port 6001"
             )
 
         print("=" * 62)

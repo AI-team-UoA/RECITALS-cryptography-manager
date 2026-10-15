@@ -17,7 +17,7 @@ services:
     build: .
     image: ghcr.io/ai-team-uoa/recitals-cryptography-manager:latest
     ports:
-      - "8000:8000"
+      - "6001:6001"
     environment:
       CRM_AUTH_MODE: dev
       CRM_LOG_LEVEL: INFO
@@ -42,7 +42,7 @@ services:
       identity:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-fsS", "http://localhost:6001/health"]
       interval: 10s
       timeout: 5s
       retries: 5

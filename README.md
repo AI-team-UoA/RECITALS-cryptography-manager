@@ -174,11 +174,11 @@ rotated = enc.rotate_keyset(keyset)
 ### As a service
 
 ```bash
-uv run uvicorn cryptography_manager.main:app --reload
+uv run uvicorn cryptography_manager.main:app --reload --port 6001
 ```
 
 ```bash
-curl -X POST http://127.0.0.1:8000/cryptography \
+curl -X POST http://127.0.0.1:6001/cryptography \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -251,13 +251,13 @@ A typical exchange:
 
 ```bash
 # 1. Create a keyset and keep it. This is the only time it is handed out.
-KEYSET=$(curl -s -X POST http://127.0.0.1:8000/cryptography \
+KEYSET=$(curl -s -X POST http://127.0.0.1:6001/cryptography \
   -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
   -d '{"operation":"key_management","backend":"tink","input_data":{},
        "parameters":{"action":"generate_key"}}' | jq -r .result.keyset)
 
 # 2. Encrypt, passing the keyset back in key_config.
-curl -X POST http://127.0.0.1:8000/cryptography \
+curl -X POST http://127.0.0.1:6001/cryptography \
   -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
   -d "$(jq -n --arg ks "$KEYSET" '{operation:"encryption",backend:"tink",
         input_data:{plaintext:"sensitive"},
@@ -478,7 +478,7 @@ git clone https://github.com/AI-team-UoA/RECITALS-cryptography-manager.git
 cd RECITALS-cryptography-manager
 
 docker build -t recitals-cryptography-manager .
-docker run -p 8000:8000 \
+docker run -p 6001:6001 \
   -v "$(pwd)/config.yaml:/app/config.yaml:ro" \
   -v crm-audit:/app/audit \
   recitals-cryptography-manager
@@ -500,7 +500,7 @@ tagged `latest`, `main` and `sha-<commit>`.
 > An organisation owner can make it public from the package's settings page,
 > after which the pull works anonymously and no login is needed.
 
-The image runs as an unprivileged user, exposes port 8000 and carries a
+The image runs as an unprivileged user, exposes port 6001 and carries a
 healthcheck against `/health`. Audit records and privacy budget state are
 written to `/app/audit`, which is declared as a volume: a privacy budget that
 resets when the container is replaced is not a guarantee of anything.

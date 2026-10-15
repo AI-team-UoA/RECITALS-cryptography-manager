@@ -106,7 +106,7 @@ jobs:
 
       - name: Smoke-test the image
         run: |
-          docker run -d --name crm -p 8000:8000 crm:smoke-test
+          docker run -d --name crm -p 6001:6001 crm:smoke-test
           for i in $(seq 1 60); do
             if [ "$(docker inspect --format='{{.State.Health.Status}}' crm)" = "healthy" ]; then
               echo "container healthy after ${i}s"; break
@@ -115,18 +115,18 @@ jobs:
           done
 
           echo "--- health ---"
-          curl -fsS http://127.0.0.1:8000/health
+          curl -fsS http://127.0.0.1:6001/health
 
           echo "--- an unauthenticated request must be refused ---"
           code=$(curl -s -o /dev/null -w '%{http_code}' -X POST \
-            http://127.0.0.1:8000/cryptography \
+            http://127.0.0.1:6001/cryptography \
             -H 'Content-Type: application/json' \
             -d '{"operation":"differential_privacy","backend":"pydp","input_data":{"data":[1]}}')
           [ "$code" = "401" ] || { echo "expected 401, got $code"; exit 1; }
 
           echo "--- a differential privacy query must succeed ---"
           code=$(curl -s -o /dev/null -w '%{http_code}' -X POST \
-            http://127.0.0.1:8000/cryptography \
+            http://127.0.0.1:6001/cryptography \
             -H 'Authorization: Bearer ci-smoke-test' \
             -H 'Content-Type: application/json' \
             -d '{"operation":"differential_privacy","backend":"pydp","input_data":{"data":[1,2,3,4,5]},"parameters":{"query_type":"Count","epsilon_cost":0.1}}')
