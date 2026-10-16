@@ -1,0 +1,52 @@
+# Deployment template for the RECITALS UC3 testbed.
+#
+# A starting point for the platform's deployment repository, not a file that
+# is deployed from here. The image is referenced by digest so a deployment is
+# reproducible and a rollback means restoring one line.
+#
+#     cp .env.example .env && chmod 600 .env     # then fill it in
+#     docker compose --project-name recitals-uc3 -f compose.yaml config --quiet
+#     docker compose --project-name recitals-uc3 -f compose.yaml up -d --no-build
+
+services:
+  cryptography-manager:
+    # Prefer the digest; the tag is there to say which release it is.
+    # Find it with: docker buildx imagetools inspect <image>:<tag>
+    image: ghcr.io/ai-team-uoa/recitals-cryptography-manager:${CRM_IMAGE_TAG:?set CRM_IMAGE_TAG}@${CRM_IMAGE_DIGEST:?set CRM_IMAGE_DIGEST}
+    env_file:
+      - .env
+    environment:
+      # Paths inside the container. Fixed here rather than in .env because
+      # they must agree with the mounts below.
+      CRM_CONFIG_PATH: /app/config.yaml
+      CRM_AUDIT_LOG_PATH: /app/audit/crm-audit.jsonl
+      CRM_BUDGET_STORE_PATH: /app/audit/budgets.json
+    ports:
+      # Allocated host port. Bound to localhost when TLS is terminated by an
+      # ingress on the same host; widen it only if the ingress is elsewhere.
+      - "${CRM_BIND_ADDRESS:-127.0.0.1}:6001:6001"
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+      # Holds the audit trail and every caller's privacy budget. Deleting it
+      # resets everyone's epsilon, which voids the privacy guarantee: never
+      # remove it during a redeploy or a rollback.
+      - crm-state:/app/audit
+    # The image's own HEALTHCHECK probes /health; nothing to add here.
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+volumes:
+  crm-state:
+    # A fixed name, so the volume is the same one whatever the project name.
+    name: recitals-crm-state

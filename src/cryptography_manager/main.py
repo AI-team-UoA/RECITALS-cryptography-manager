@@ -13,6 +13,7 @@ from __future__ import annotations
 import sys
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -28,7 +29,22 @@ from .core.manager import CryptographyManager
 from .core.workflow import CryptographyWorkflow
 
 TITLE = "RECITALS Cryptography Manager"
-VERSION = "0.3.0"
+
+
+
+def _installed_version() -> str:
+    """Read the version from the installed package metadata.
+
+    This keeps pyproject.toml the only place the version is written down.
+    """
+    try:
+        return version("cryptography-manager")
+    except PackageNotFoundError:  # pragma: no cover - not installed
+        return "0.0.0+unknown"
+
+
+VERSION = _installed_version()
+
 DESCRIPTION = (
     "Unified interface for differential privacy, encryption and key "
     "management. Homomorphic encryption and secure multi-party computation "

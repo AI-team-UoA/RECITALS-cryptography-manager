@@ -486,7 +486,14 @@ docker run -p 6001:6001 \
 
 Prebuilt images are published to
 `ghcr.io/ai-team-uoa/recitals-cryptography-manager` on every push to `main`,
-tagged `latest`, `main` and `sha-<commit>`.
+tagged `latest`, `main` and `sha-<commit>`. Pushing a `vX.Y.Z` git tag also
+publishes `X.Y.Z` and `X.Y`, which is what a deployment should pin.
+
+For a platform deployment, `deploy/uc3/` holds a Compose template and an
+annotated `.env.example`. The template pins the image by digest, keeps the
+audit and budget state in a named volume, and runs the container read-only
+with no capabilities. Copy both files and `config.yaml` to the deployment
+repository and fill in the `.env`.
 
 > **The package is currently private.** Pulling it requires authenticating to
 > the registry with a personal access token carrying the `read:packages` scope,

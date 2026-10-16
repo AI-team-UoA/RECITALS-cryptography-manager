@@ -11,3 +11,8 @@ audit/
 
 # Built documentation site
 site/
+
+# Local environment files hold secrets; only the template is tracked
+.env
+*.env
+!.env.example
